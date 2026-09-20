@@ -1,0 +1,18 @@
+{
+  "name": "topo-kids-wateren-nederland",
+  "version": "1.0.0",
+  "description": "Interactieve educatieve webapplicatie om de 17 wateren van Nederland te oefenen en spellen",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "topografie",
+    "educatief",
+    "nederland",
+    "aardrijkskunde",
+    "d3js"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Topografie: Wateren van Nederland</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+  <meta name="description" content="Oefen en leer interactief de 17 wateren van Nederland met topografische kaart, uitspraak en spelling!">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- D3.js v7 voor haarscherpe geo-projectie en soepel zoomen/pannen -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- Google Fonts: Fredoka & Quicksand voor kindvriendelijke typografie -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif']
+          },
+          colors: {
+            topoBlue: '#1e75b9',
+            topoNavy: '#0f3c64',
+            topoGold: '#f39c12',
+            waterWave: '#38bdf8'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      background: radial-gradient(circle at 50% 20%, #2980b9 0%, #1a5276 60%, #154360 100%);
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+
+    /* Kaart loading overlay */
+    #mapLoadingSpinner {
+      transition: opacity 0.3s ease;
+    }
+
+    /* Vloeiende zone water stroming animatie voor geselecteerde rivieren */
+    @keyframes riverFlowPulse {
+      0% { stroke-dashoffset: 80; filter: drop-shadow(0 0 6px #38bdf8); }
+      50% { stroke-dashoffset: 0; filter: drop-shadow(0 0 16px #f1c40f); }
+      100% { stroke-dashoffset: -80; filter: drop-shadow(0 0 6px #38bdf8); }
+    }
+
+    .highlight-flowing-river {
+      stroke: #f1c40f !important;
+      stroke-width: 9px !important;
+      stroke-linecap: round;
+      stroke-dasharray: 14, 7;
+      animation: riverFlowPulse 1.2s linear infinite;
+      cursor: pointer;
+    }
+
+    /* Radar puls rond de actieve zone */
+    @keyframes beaconPulse {
+      0% { r: 16; opacity: 0.95; stroke-width: 6; }
+      70% { r: 65; opacity: 0.15; stroke-width: 2; }
+      100% { r: 75; opacity: 0; stroke-width: 0; }
+    }
+
+    .radar-beacon {
+      fill: none;
+      stroke: #f39c12;
+      animation: beaconPulse 1.5s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+    }
+
+    /* Bouncend pijl-icoon naar de juiste locatie */
+    @keyframes jumpArrow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .jumping-arrow {
+      animation: jumpArrow 0.85s ease-in-out infinite;
+      transform-origin: center bottom;
+      pointer-events: none;
+    }
+
+    /* Pin badge animaties conform het lesblad (TopTopo glowing water pins) */
+    .map-pin {
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+      transform-origin: center center;
+    }
+
+    .map-pin:hover {
+      transform: scale(1.22);
+      filter: drop-shadow(0 0 10px #38bdf8);
+    }
+
+    .map-pin.active-target {
+      transform: scale(1.35);
+      filter: drop-shadow(0 0 14px #f39c12) drop-shadow(0 0 24px #f1c40f);
+    }
+
+    /* Korte feestelijke puls bij een goed antwoord */
+    @keyframes pinCorrectFlash {
+      0% { transform: scale(1); filter: drop-shadow(0 0 0px #10b981); }
+      40% { transform: scale(1.38); filter: drop-shadow(0 0 18px #10b981) drop-shadow(0 0 28px #34d399); }
+      100% { transform: scale(1.15); filter: drop-shadow(0 0 12px #10b981); }
+    }
+
+    .map-pin.correct-flash {
+      animation: pinCorrectFlash 0.55s ease-out forwards;
+    }
+
+    .map-pin.correct-flash .pin-circle {
+      fill: #10b981 !important;
+      stroke: #ffffff !important;
+    }
+
+    .map-pin.correct-flash .pin-label-rect {
+      fill: #ecfdf5 !important;
+      stroke: #10b981 !important;
+    }
+
+    .map-pin.correct-flash .pin-label-text {
+      fill: #065f46 !important;
+    }
+
+    /* Schudden van de pin bij een fout antwoord */
+    @keyframes pinShake {
+      0%, 100% { transform: scale(1) translateX(0); }
+      20%, 60% { transform: scale(1.22) translateX(-7px); }
+      40%, 80% { transform: scale(1.22) translateX(7px); }
+    }
+
+    .map-pin.wrong-shake {
+      animation: pinShake 0.45s ease-in-out;
+      filter: drop-shadow(0 0 18px #ef4444) !important;
+    }
+
+    /* Stijl voor goed beantwoorde pinnen */
+    .map-pin.answered-correct .pin-circle {
+      fill: #10b981 !important;
+      stroke: #ffffff !important;
+    }
+
+    .map-pin.answered-correct .pin-label-rect {
+      fill: #ecfdf5 !important;
+      stroke: #10b981 !important;
+    }
+
+    .map-pin.answered-correct .pin-label-text {
+      fill: #065f46 !important;
+    }
+
+    /* Schudden van het paneel bij een fout antwoord */
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    .shake-animation {
+      animation: shakeCard 0.45s ease-in-out;
+    }
+
+    /* Sprekende puls-animatie voor knoppen */
+    @keyframes speakerWave {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
+      50% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); }
+    }
+
+    .speaking-wave {
+      animation: speakerWave 1.2s infinite;
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #e0f2fe; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+  </style>
+</head>
+
+<body class="h-full flex flex-col overflow-hidden text-slate-800">
+
+  <!-- Header in TopTopo banner-stijl -->
+  <header class="bg-white/95 backdrop-blur-md border-b-2 border-sky-200/80 shadow-md z-30 px-3 py-2 sm:px-5 sm:py-2.5 flex-shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Titel & Logo -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-md shadow-sky-300 text-xl font-black">
+          🌊
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-xl font-black text-sky-950 tracking-tight leading-none">Wateren van Nederland</h1>
+            <span class="text-[11px] font-extrabold bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-full">Topografie</span>
+          </div>
+          <p class="text-xs text-sky-700 font-bold hidden sm:block">17 wateren oefenen en spellen (I t/m XVII)</p>
+        </div>
+      </div>
+
+      <!-- Spelmodi Wisselaar (Oefenen, Aanwijzen, Spellen) -->
+      <div class="flex items-center bg-sky-100/90 p-1 rounded-2xl border border-sky-200 shadow-inner gap-1">
+        <button id="modeExplore" onclick="setMode('explore')" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-sm bg-white text-sky-950">
+          <span>🔍</span> <span>Oefenen</span>
+        </button>
+        <button id="modeLocate" onclick="setMode('locate')" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-sky-800 hover:text-sky-950">
+          <span>🎯</span> <span>Aanwijzen</span>
+        </button>
+        <button id="modeSpell" onclick="setMode('spell')" class="px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-sky-800 hover:text-sky-950">
+          <span>✏️</span> <span>Spellen</span>
+        </button>
+      </div>
+
+      <!-- Statistieken & Knoppen -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- Sterren & Streak -->
+        <div class="flex items-center bg-amber-50 border-2 border-amber-200 px-2.5 py-1 rounded-2xl gap-2 shadow-sm">
+          <div class="flex items-center gap-1">
+            <span class="text-base">⭐</span>
+            <span id="statStars" class="font-black text-amber-900 text-sm sm:text-base">0</span>
+          </div>
+          <div class="w-px h-4 bg-amber-200"></div>
+          <div class="flex items-center gap-0.5">
+            <span class="text-sm">🔥</span>
+            <span id="statStreak" class="font-black text-orange-600 text-xs sm:text-sm">0</span>
+          </div>
+        </div>
+
+        <!-- Geluidsknop -->
+        <button id="btnToggleSound" onclick="toggleSound()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-sky-50 hover:bg-sky-100 active:scale-95 border-2 border-sky-200 text-sky-800 flex items-center justify-center text-lg transition-all shadow-sm" title="Geluid aan of uit">
+          🔊
+        </button>
+
+        <!-- Herstartknop -->
+        <button onclick="restartCurrentMode()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-sky-50 hover:bg-sky-100 active:scale-95 border-2 border-sky-200 text-sky-800 flex items-center justify-center text-base font-black transition-all shadow-sm" title="Opnieuw beginnen">
+          ↺
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Voortgangsbalkje bovenaan -->
+    <div class="max-w-7xl mx-auto mt-2 flex items-center gap-3">
+      <div class="flex-1 bg-sky-100 h-2.5 sm:h-3 rounded-full overflow-hidden border border-sky-200 p-0.5 shadow-inner">
+        <div id="topProgressBar" class="bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+      </div>
+      <span id="topProgressText" class="text-xs font-black text-sky-900 whitespace-nowrap min-w-[70px] text-right">0 / 17</span>
+    </div>
+  </header>
+
+  <main class="flex-1 relative flex flex-col lg:flex-row overflow-hidden max-w-7xl mx-auto w-full p-2 sm:p-4 gap-3 sm:gap-4">
+    
+    <!-- Linkerhelft: Natuurgetrouwe TopTopo Kaart van Nederland -->
+    <section class="flex-1 bg-sky-900/40 rounded-3xl border-2 border-sky-300/40 shadow-2xl relative overflow-hidden flex flex-col min-h-[420px] lg:min-h-0 backdrop-blur-sm">
+      
+      <!-- Header Badge op de kaart -->
+      <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-md border border-sky-200 pointer-events-none z-10 flex items-center gap-2">
+        <span class="font-black text-xs text-sky-950">🇳🇱 Nederland</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+        <span class="text-[11px] font-bold text-sky-700">Wateren (I-XVII)</span>
+      </div>
+
+      <!-- Zoom Knoppen rechtsboven op de kaart -->
+      <div class="absolute top-3 right-3 z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border-2 border-sky-200">
+        <button id="btnZoomIn" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-sky-50 hover:bg-sky-100 active:scale-90 text-sky-900 font-black text-lg rounded-xl transition-all shadow-sm" title="Inzoomen">
+          ＋
+        </button>
+        <button id="btnZoomOut" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-sky-50 hover:bg-sky-100 active:scale-90 text-sky-900 font-black text-lg rounded-xl transition-all shadow-sm" title="Uitzoomen">
+          −
+        </button>
+        <button id="btnZoomReset" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-sky-50 hover:bg-sky-100 active:scale-90 text-sky-900 font-black text-xs rounded-xl transition-all shadow-sm" title="Herstel kaart">
+          ↺
+        </button>
+      </div>
+
+      <!-- Hint knop op de kaart linksonder -->
+      <button id="btnMapHint" onclick="showHint()" class="absolute bottom-3 left-3 z-20 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs sm:text-sm px-3.5 py-2 rounded-2xl shadow-lg border-2 border-white flex items-center gap-1.5 active:scale-95 transition-all">
+        <span>💡</span> <span>Zone Hint</span>
+      </button>
+
+      <!-- Laad-indicator tijdens het ophalen van de officiële GeoJSON -->
+      <div id="mapLoadingSpinner" class="absolute inset-0 bg-sky-900/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-white gap-3 pointer-events-none transition-opacity duration-300">
+        <div class="w-10 h-10 border-4 border-white/30 border-t-amber-400 rounded-full animate-spin"></div>
+        <span class="text-xs font-black tracking-wide text-sky-100">Officiële kaart van Nederland laden...</span>
+      </div>
+
+      <!-- SVG Element met D3 projectie -->
+      <svg id="svgNederland" viewBox="0 0 800 960" class="w-full h-full select-none cursor-grab active:cursor-grabbing">
+        <defs>
+          <!-- Zachte diepteschaduw onder het landschap -->
+          <filter id="landShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="6" stdDeviation="6" flood-color="#0a2e4c" flood-opacity="0.5" />
+          </filter>
+
+          <!-- Golfjespatroon voor de Noordzee -->
+          <pattern id="seaPattern" width="80" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 0 20 Q 20 10 40 20 T 80 20" fill="none" stroke="#60a5fa" stroke-width="1.2" opacity="0.25" />
+            <path d="M 10 32 Q 25 24 40 32 T 70 32" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.18" />
+          </pattern>
+
+          <!-- Topo lengte- en breedtegraad rasterlijnen -->
+          <pattern id="latLongGrid" width="120" height="120" patternUnits="userSpaceOnUse">
+            <path d="M 120 0 L 0 0 0 120" fill="none" stroke="#38bdf8" stroke-width="0.7" stroke-dasharray="3, 5" opacity="0.28" />
+          </pattern>
+        </defs>
+
+        <!-- Inzoombare container -->
+        <g id="zoomContainer">
+          <!-- Zee achtergrond met raster (Noordzee ook direct aanklikbaar) -->
+          <rect id="rectNorthSea" x="-200" y="-200" width="1200" height="1360" fill="#2074aa" class="cursor-pointer" />
+          <rect x="-200" y="-200" width="1200" height="1360" fill="url(#seaPattern)" pointer-events="none" />
+          <rect x="-200" y="-200" width="1200" height="1360" fill="url(#latLongGrid)" pointer-events="none" />
+
+          <!-- Zeeën & Meren oppervlakten (Waddenzee, IJsselmeer, Markermeer) -->
+          <g id="layerSeasLakes"></g>
+
+          <!-- Provincies met natuurgetrouwe contouren -->
+          <g id="layerProvinces" filter="url(#landShadow)"></g>
+
+          <!-- Rivieren, Kanalen en Dijken -->
+          <g id="layerRivers"></g>
+
+          <!-- Zone highlights (pulserende radar & bouncende pijl) -->
+          <g id="layerHighlights" pointer-events="none"></g>
+
+          <!-- Pins (I t/m XVII) met golventeken en Romeinse cijfers -->
+          <g id="layerPins"></g>
+        </g>
+      </svg>
+
+      <!-- Legenda onderaan de kaart -->
+      <div class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-sky-200 shadow text-[10px] font-bold text-sky-900 pointer-events-none flex items-center gap-2.5">
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-cyan-400 border border-white flex items-center justify-center text-[8px] text-white">≋</div>
+          <span>Water (I-XVII)</span>
+        </div>
+        <div class="w-px h-3 bg-sky-200"></div>
+        <span>Schaal: 20 km</span>
+      </div>
+
+    </section>
+
+    <!-- Rechterhelft: Instructies, Spellen & Feedback -->
+    <section class="w-full lg:w-[420px] flex-shrink-0 flex flex-col gap-3">
+      
+      <!-- Hoofdkaart met Vraag & Interactie -->
+      <div id="cardInteractive" class="bg-white rounded-3xl border-2 border-sky-200 shadow-xl p-4 sm:p-5 flex flex-col gap-3 relative overflow-hidden transition-all">
+        
+        <!-- Header van de actiekaart -->
+        <div class="flex items-center justify-between border-b border-sky-100 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span id="badgeIcon" class="text-2xl">🔍</span>
+            <div>
+              <h2 id="badgeTitle" class="font-black text-sky-950 text-base leading-tight">Oefenen & Verkennen</h2>
+              <p id="badgeSubtitle" class="text-xs text-sky-600 font-bold">Tik op een nummer op de kaart</p>
+            </div>
+          </div>
+          
+          <!-- Uitspreekknop -->
+          <button id="btnPronounce" onclick="speakCurrentContext()" class="bg-sky-100 hover:bg-sky-200 text-sky-950 font-black text-xs px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-sm transition-all active:scale-95" title="Beluister de uitspraak">
+            <span>🔊</span> <span id="pronounceLabel">Spreek uit</span>
+          </button>
+        </div>
+
+        <!-- Hoofdtekst / Vraagstelling -->
+        <div id="questionContainer" class="min-h-[70px] flex flex-col justify-center">
+          <p id="questionPrompt" class="text-base sm:text-lg font-black text-sky-950 leading-snug">
+            Klik op een water op de kaart om de naam te horen en te ontdekken waar het ligt!
+          </p>
+          <p id="questionSubtext" class="text-xs text-slate-500 font-semibold mt-1">
+            Alle 17 wateren uit de leskaart zijn genummerd met Romeinse cijfers (I t/m XVII).
+          </p>
+        </div>
+
+        <!-- SPELLING PANEEL: Zowel Lettertegels als Zelf Typen -->
+        <div id="spellingPanel" class="hidden flex-col gap-3 pt-1">
+          
+          <!-- Sub-modus switcher -->
+          <div class="flex items-center justify-center bg-sky-100/90 p-1 rounded-2xl border border-sky-200 gap-1 self-center">
+            <button id="btnSpellSubTiles" onclick="setSpellSubmode('tiles')" class="px-3 py-1 rounded-xl text-xs font-black transition-all bg-white text-sky-950 shadow-sm">
+              🔤 Lettertegels
+            </button>
+            <button id="btnSpellSubTyping" onclick="setSpellSubmode('typing')" class="px-3 py-1 rounded-xl text-xs font-black transition-all text-sky-800 hover:text-sky-950">
+              ⌨️ Zelf typen
+            </button>
+          </div>
+
+          <!-- Lettervakjes (slots) -->
+          <div class="bg-sky-50/90 p-3 rounded-2xl border-2 border-sky-200 flex flex-col items-center gap-2">
+            <div class="text-[11px] font-black text-sky-800 flex items-center justify-between w-full px-1">
+              <span id="spellTargetRomanBadge" class="bg-sky-200 text-sky-950 px-2.5 py-0.5 rounded-lg">Nummer IV</span>
+              <span id="spellLettersCount">0 / 9 letters</span>
+            </div>
+            
+            <!-- Dynamische slots voor letters -->
+            <div id="letterSlotsContainer" class="flex flex-wrap justify-center gap-1.5 max-w-full py-1 min-h-[48px]">
+              <!-- Wordt gevuld via JS -->
+            </div>
+          </div>
+
+          <!-- OPTIE A: Lettertegels bank (Scrabble stijl) -->
+          <div id="spellTilesBankContainer" class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-black text-sky-800 px-1">
+              <span>Kies de juiste letters:</span>
+              <button onclick="handleSpellBackspace()" class="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 px-2.5 py-1 rounded-xl font-black flex items-center gap-1 active:scale-95">
+                <span>⌫</span> <span>Wis</span>
+              </button>
+            </div>
+            <div id="letterTilesBank" class="flex flex-wrap justify-center gap-1.5 p-1 bg-sky-50/50 rounded-2xl border border-sky-200 min-h-[75px]">
+              <!-- Wordt gevuld via JS -->
+            </div>
+          </div>
+
+          <!-- OPTIE B: Zelf Typen invoerveld -->
+          <div id="spellTypingInputContainer" class="hidden flex-col gap-2">
+            <label class="text-xs font-black text-sky-900 px-1">Typ de naam van het water voluit:</label>
+            <div class="flex gap-2">
+              <input type="text" id="spellTextInput" placeholder="Typ de naam hier..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="flex-1 bg-white border-2 border-sky-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 rounded-2xl px-3.5 py-2.5 font-black text-sky-950 text-base placeholder-slate-400 outline-none transition-all shadow-inner">
+              <button onclick="checkTypedSpelling()" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-black text-sm px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1">
+                <span>Controleer</span> <span>✓</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 px-1 font-semibold">Tip: Druk op <kbd class="bg-slate-100 border border-slate-300 rounded px-1 font-bold">Enter</kbd> om te controleren.</p>
+          </div>
+
+        </div>
+
+        <!-- Dynamische Feedback Box -->
+        <div id="feedbackBox" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 flex items-start gap-2.5 transition-all">
+          <span id="feedbackIcon" class="text-2xl flex-shrink-0">💡</span>
+          <div class="flex-1">
+            <p id="feedbackText" class="text-xs sm:text-sm font-black text-sky-950">
+              Welkom bij Topografie Nederland! Klik op een pin of start een spelmodus hierboven.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Wateren Lijst & Snelle Referentie -->
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl border-2 border-sky-200 shadow-md p-3 sm:p-4 flex-1 flex flex-col overflow-hidden min-h-[160px]">
+        <div class="flex items-center justify-between pb-2 border-b border-sky-100">
+          <span id="waterListTitle" class="text-xs font-black text-sky-950 uppercase tracking-wider">Overzicht (17 Wateren)</span>
+          <span id="learnedCounter" class="text-xs font-extrabold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-full">0/17 geoefend</span>
+        </div>
+        
+        <!-- Lijst met 17 wateren -->
+        <div id="waterListScroll" class="overflow-y-auto flex-1 mt-2 pr-1 space-y-1">
+          <!-- Dynamisch gegenereerd -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Feest Modal bij winst -->
+  <div id="victoryModal" class="fixed inset-0 bg-sky-950/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl border-4 border-amber-300 shadow-2xl max-w-md w-full p-6 sm:p-8 text-center flex flex-col items-center gap-4 relative animate-bounce-short">
+      
+      <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-full flex items-center justify-center text-4xl shadow-lg shadow-amber-200 border-4 border-white -mt-12">
+        🏆
+      </div>
+
+      <h2 class="text-2xl sm:text-3xl font-black text-sky-950 leading-tight font-display">
+        Geweldig Gedaan!
+      </h2>
+      
+      <p id="victorySubtitle" class="text-sm text-slate-600 font-bold">
+        Je kent nu alle 17 wateren van Nederland uit je hoofd!
+      </p>
+
+      <div class="w-full bg-amber-50 rounded-2xl border-2 border-amber-200 p-4 flex items-center justify-around">
+        <div class="text-center">
+          <span class="text-xs font-black text-amber-800 block">Sterren</span>
+          <span id="victoryStars" class="text-2xl font-black text-amber-900">⭐ 100</span>
+        </div>
+        <div class="w-px h-8 bg-amber-200"></div>
+        <div class="text-center">
+          <span class="text-xs font-black text-amber-800 block">Score</span>
+          <span id="victoryAccuracy" class="text-2xl font-black text-emerald-600">100%</span>
+        </div>
+      </div>
+
+      <button onclick="closeVictoryModal()" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white font-black text-base py-3 rounded-2xl shadow-lg shadow-sky-300 transition-all active:scale-95">
+        Speel nog een keer! 🚀
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40 hidden"></canvas>
+
+  <script>
+    /* ==========================================================================
+       1. DATASET: DE 17 WATEREN VAN NEDERLAND (EXACTE GEOGRAFISCHE COÖRDINATEN)
+       ========================================================================== */
+    const WATERS_DATA = [
+      { id: 1,  roman: "I",    name: "Schelde-Rijnkanaal",   type: "kanaal", lng: 4.24, lat: 51.48, article: "het", desc: "Verbindt de haven van Antwerpen met de Rijn via Noord-Brabant en Zeeland." },
+      { id: 2,  roman: "II",   name: "Maas",                 type: "rivier", lng: 5.92, lat: 51.18, article: "de",  desc: "Stroomt vanuit Frankrijk en België door heel Limburg en langs Noord-Brabant." },
+      { id: 3,  roman: "III",  name: "Amsterdam-Rijnkanaal", type: "kanaal", lng: 5.05, lat: 52.18, article: "het", desc: "Druk bevaren kanaal tussen Amsterdam en de grote rivieren bij Tiel." },
+      { id: 4,  roman: "IV",   name: "Waddenzee",            type: "zee",    lng: 5.45, lat: 53.35, article: "de",  desc: "Uniek getijdengebied tussen het vasteland en de Waddeneilanden." },
+      { id: 5,  roman: "V",    name: "Westerschelde",        type: "zee",    lng: 3.70, lat: 51.38, article: "de",  desc: "Brede zeearm in Zeeland die toegang geeft tot de haven van Antwerpen." },
+      { id: 6,  roman: "VI",   name: "Lek",                  type: "rivier", lng: 4.88, lat: 51.93, article: "de",  desc: "Voortzetting van de Nederrijn vanaf Wijk bij Duurstede naar het westen." },
+      { id: 7,  roman: "VII",  name: "Oosterschelde",        type: "zee",    lng: 3.90, lat: 51.60, article: "de",  desc: "Grootste nationaal park van Nederland, afgesloten door de stormvloedkering." },
+      { id: 8,  roman: "VIII", name: "IJssel",               type: "rivier", lng: 6.12, lat: 52.24, article: "de",  desc: "Rivier die bij Arnhem aftakt van de Rijn en noordwaarts naar het IJsselmeer stroomt." },
+      { id: 9,  roman: "IX",   name: "Noordzeekanaal",       type: "kanaal", lng: 4.68, lat: 52.44, article: "het", desc: "Verbindt de haven van Amsterdam rechtstreeks met de Noordzee bij IJmuiden." },
+      { id: 10, roman: "X",    name: "Waal",                 type: "rivier", lng: 5.40, lat: 51.87, article: "de",  desc: "De breedste en drukst bevaren arm van de Rijn in Nederland." },
+      { id: 11, roman: "XI",   name: "Noordzee",             type: "zee",    lng: 3.72, lat: 52.40, article: "de",  desc: "De open zee ten noorden en westen van Nederland met brede zandstranden." },
+      { id: 12, roman: "XII",  name: "Nieuwe Waterweg",      type: "kanaal", lng: 4.20, lat: 51.92, article: "de",  desc: "Belangrijke waterweg die Rotterdam en Europoort verbindt met de Noordzee." },
+      { id: 13, roman: "XIII", name: "Veluwemeer",           type: "meer",   lng: 5.68, lat: 52.42, article: "het", desc: "Ondiep randmeer tussen Gelderland en Flevoland, populair bij watersporters." },
+      { id: 14, roman: "XIV",  name: "Twentekanaal",         type: "kanaal", lng: 6.45, lat: 52.20, article: "het", desc: "Kanaal in Overijssel en Gelderland dat Enschede en Hengelo verbindt met de IJssel." },
+      { id: 15, roman: "XV",   name: "IJsselmeer",           type: "meer",   lng: 5.30, lat: 52.75, article: "het", desc: "Het grootste zoetwatermeer van Nederland, ontstaan na de bouw van de Afsluitdijk." },
+      { id: 16, roman: "XVI",  name: "Nederrijn",            type: "rivier", lng: 5.75, lat: 51.96, article: "de",  desc: "Riviertak van de Rijn die langs Arnhem stroomt richting Wijk bij Duurstede." },
+      { id: 17, roman: "XVII", name: "Rijn",                 type: "rivier", lng: 6.08, lat: 51.85, article: "de",  desc: "Komt bij Spijk/Lobith Nederland binnen en splitst zich in Waal en Nederrijn." }
+    ];
+
+    /* ==========================================================================
+       2. HOOGWAARDIGE GEOMETRIE VAN WATERWEGEN EN FALLBACK PROVINCIES
+       ========================================================================== */
+    const WATER_GEOMETRIES = {
+      afsluitdijk: [[5.03, 52.93], [5.39, 53.11]],
+      houtribdijk: [[5.29, 52.70], [5.44, 52.53]],
+
+      // Rivieren (WGS84 coördinaten)
+      rijn: [[6.18, 51.82], [6.12, 51.85], [6.05, 51.87]],
+      waal: [[6.05, 51.87], [5.86, 51.84], [5.61, 51.89], [5.40, 51.87], [5.09, 51.85], [4.77, 51.82]],
+      nederrijn: [[6.05, 51.87], [5.91, 51.99], [5.75, 51.96], [5.57, 51.96], [5.34, 51.97]],
+      lek: [[5.34, 51.97], [5.20, 51.95], [4.88, 51.93], [4.65, 51.90]],
+      nieuweWaterweg: [[4.65, 51.90], [4.45, 51.91], [4.20, 51.92], [4.03, 51.96]],
+      ijssel: [[5.91, 51.99], [6.12, 52.14], [6.12, 52.24], [6.12, 52.34], [6.09, 52.51], [5.91, 52.56]],
+      maas: [[5.70, 50.78], [5.69, 50.85], [5.80, 50.94], [5.87, 51.10], [5.92, 51.18], [5.99, 51.19], [6.17, 51.37], [6.04, 51.60], [5.95, 51.65], [5.74, 51.76], [5.30, 51.70], [4.86, 51.70]],
+
+      // Kanalen
+      amsterdamRijnkanaal: [[4.95, 52.38], [5.08, 52.09], [5.34, 51.97], [5.43, 51.88]],
+      noordzeekanaal: [[4.56, 52.46], [4.68, 52.44], [4.95, 52.38]],
+      twentekanaal: [[6.16, 52.20], [6.45, 52.20], [6.89, 52.22]],
+      scheldeRijnkanaal: [[4.22, 51.35], [4.24, 51.48], [4.24, 51.65]],
+
+      // Meren & Zeearmen contouren
+      ijsselmeer: [[5.03, 52.93], [5.39, 53.11], [5.44, 52.98], [5.71, 52.84], [5.60, 52.66], [5.44, 52.53], [5.29, 52.70], [5.11, 52.77], [5.03, 52.93]],
+      veluwemeer: [[5.48, 52.30], [5.62, 52.36], [5.68, 52.42], [5.83, 52.45], [5.85, 52.57]],
+      waddenzee: [[4.73, 53.01], [4.82, 53.17], [5.03, 52.93], [5.39, 53.11], [5.90, 53.37], [6.23, 53.41], [6.45, 53.40], [6.35, 53.51], [5.92, 53.47], [5.55, 53.44], [5.11, 53.32], [4.73, 53.01]],
+      oosterschelde: [[3.69, 51.72], [3.97, 51.64], [4.13, 51.66], [4.19, 51.64], [3.90, 51.60], [3.66, 51.58], [3.69, 51.72]],
+      westerschelde: [[3.48, 51.49], [3.70, 51.38], [4.02, 51.50], [4.21, 51.30], [3.98, 51.35], [3.71, 51.37], [3.37, 51.37], [3.48, 51.49]]
+    };
+
+    // Kindvriendelijke provinciekleuren volgens de TopTopo leskaart
+    const PROVINCE_COLORS = {
+      "Groningen": "#e74c3c",
+      "Friesland": "#d63031",
+      "Fryslân": "#d63031",
+      "Drenthe": "#f1c40f",
+      "Overijssel": "#b53471",
+      "Flevoland": "#8db600",
+      "Gelderland": "#2ecc71",
+      "Utrecht": "#9b59b6",
+      "Noord-Holland": "#2980b9",
+      "Zuid-Holland": "#e67e22",
+      "Zeeland": "#8e44ad",
+      "Noord-Brabant": "#a4b020",
+      "Limburg": "#27ae60"
+    };
+
+    const DEFAULT_COLORS = ["#e74c3c", "#d63031", "#f1c40f", "#b53471", "#8db600", "#2ecc71", "#9b59b6", "#2980b9", "#e67e22", "#8e44ad", "#a4b020", "#27ae60"];
+
+    // Ingebouwde anatomisch accurate provincie contouren als robuuste offline fallback
+    const BACKUP_PROVINCES_GEOJSON = {
+      type: "FeatureCollection",
+      features: [
+        { type: "Feature", properties: { name: "Groningen" }, geometry: { type: "Polygon", coordinates: [[[6.23, 53.41], [6.45, 53.40], [6.68, 53.41], [6.83, 53.44], [6.92, 53.33], [7.04, 53.30], [7.21, 53.18], [7.16, 53.12], [7.11, 53.03], [7.07, 52.88], [7.00, 52.93], [6.95, 52.99], [6.88, 53.11], [6.75, 53.16], [6.57, 53.22], [6.31, 53.26], [6.23, 53.41]]] } },
+        { type: "Feature", properties: { name: "Friesland" }, geometry: { type: "MultiPolygon", coordinates: [[[[5.39, 53.11], [5.42, 53.17], [5.48, 53.22], [5.66, 53.28], [5.90, 53.37], [5.97, 53.38], [6.16, 53.38], [6.23, 53.34], [6.28, 53.28], [6.20, 53.18], [6.10, 53.10], [6.08, 53.05], [6.06, 53.00], [5.93, 52.96], [5.99, 52.88], [5.88, 52.84], [5.71, 52.84], [5.53, 52.85], [5.36, 52.88], [5.40, 52.94], [5.44, 52.98], [5.40, 53.06], [5.39, 53.11]]], [[[4.73, 53.01], [4.71, 53.08], [4.82, 53.17], [4.89, 53.16], [4.87, 53.08], [4.80, 53.03], [4.73, 53.01]]], [[[4.93, 53.24], [5.02, 53.28], [5.11, 53.32], [5.08, 53.29], [4.97, 53.25], [4.93, 53.24]]], [[[5.19, 53.36], [5.28, 53.39], [5.45, 53.44], [5.55, 53.44], [5.42, 53.39], [5.24, 53.35], [5.19, 53.36]]], [[[5.62, 53.43], [5.75, 53.46], [5.92, 53.47], [5.85, 53.44], [5.69, 53.42], [5.62, 53.43]]], [[[6.15, 53.47], [6.26, 53.50], [6.35, 53.51], [6.28, 53.48], [6.17, 53.46], [6.15, 53.47]]]] } },
+        { type: "Feature", properties: { name: "Drenthe" }, geometry: { type: "Polygon", coordinates: [[[6.43, 53.14], [6.58, 53.14], [6.68, 53.09], [6.76, 53.01], [6.79, 52.92], [6.90, 52.78], [6.99, 52.72], [6.74, 52.66], [6.48, 52.73], [6.19, 52.70], [6.32, 52.86], [6.35, 52.95], [6.40, 53.04], [6.43, 53.14]]] } },
+        { type: "Feature", properties: { name: "Overijssel" }, geometry: { type: "Polygon", coordinates: [[[5.84, 52.79], [6.12, 52.79], [6.08, 52.72], [6.07, 52.64], [5.91, 52.56], [6.09, 52.51], [6.21, 52.58], [6.46, 52.60], [6.62, 52.57], [6.78, 52.41], [7.00, 52.38], [6.93, 52.31], [7.00, 52.26], [6.89, 52.22], [6.74, 52.16], [6.56, 52.20], [6.45, 52.22], [6.16, 52.26], [6.12, 52.34], [6.14, 52.39], [6.09, 52.51], [5.91, 52.56], [5.84, 52.79]]] } },
+        { type: "Feature", properties: { name: "Flevoland" }, geometry: { type: "MultiPolygon", coordinates: [[[[5.71, 52.83], [5.69, 52.80], [5.65, 52.76], [5.62, 52.72], [5.60, 52.66], [5.67, 52.67], [5.77, 52.63], [5.83, 52.63], [5.87, 52.60], [5.94, 52.67], [5.84, 52.79], [5.71, 52.83]]], [[[5.44, 52.53], [5.42, 52.50], [5.33, 52.44], [5.15, 52.35], [5.22, 52.33], [5.30, 52.31], [5.48, 52.30], [5.62, 52.36], [5.70, 52.45], [5.85, 52.57], [5.68, 52.60], [5.44, 52.53]]]] } },
+        { type: "Feature", properties: { name: "Gelderland" }, geometry: { type: "Polygon", coordinates: [[[5.83, 52.45], [6.07, 52.47], [5.98, 52.35], [5.96, 52.21], [6.20, 52.14], [6.42, 52.16], [6.52, 52.11], [6.65, 52.10], [6.62, 52.04], [6.72, 51.97], [6.58, 51.93], [6.49, 51.86], [6.25, 51.87], [6.12, 51.85], [6.05, 51.87], [5.86, 51.84], [5.72, 51.81], [5.61, 51.89], [5.43, 51.88], [5.28, 51.88], [5.22, 51.95], [5.34, 51.97], [5.57, 51.96], [5.66, 51.97], [5.91, 51.99], [5.77, 52.10], [5.58, 52.14], [5.48, 52.22], [5.60, 52.26], [5.63, 52.30], [5.63, 52.34], [5.78, 52.38], [5.83, 52.45]]] } },
+        { type: "Feature", properties: { name: "Utrecht" }, geometry: { type: "Polygon", coordinates: [[[5.26, 52.25], [5.38, 52.25], [5.39, 52.16], [5.43, 52.13], [5.41, 52.08], [5.55, 52.03], [5.57, 51.96], [5.46, 51.99], [5.34, 51.97], [5.20, 52.07], [5.16, 52.03], [5.08, 52.03], [5.04, 52.02], [4.88, 52.09], [4.90, 52.21], [4.93, 52.22], [4.97, 52.27], [5.28, 52.21], [5.26, 52.25]]] } },
+        { type: "Feature", properties: { name: "Noord-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.74, 52.96], [4.73, 52.89], [4.65, 52.77], [4.65, 52.71], [4.63, 52.66], [4.62, 52.62], [4.65, 52.55], [4.59, 52.49], [4.56, 52.46], [4.53, 52.41], [4.53, 52.37], [4.58, 52.31], [4.64, 52.27], [4.76, 52.26], [4.86, 52.28], [5.04, 52.31], [5.07, 52.33], [5.16, 52.30], [5.25, 52.30], [5.18, 52.22], [5.08, 52.21], [4.95, 52.38], [4.97, 52.39], [5.02, 52.38], [5.11, 52.46], [5.04, 52.46], [5.07, 52.50], [5.06, 52.52], [5.01, 52.56], [5.06, 52.64], [5.12, 52.63], [5.29, 52.70], [5.11, 52.77], [5.22, 52.74], [5.08, 52.85], [5.03, 52.93], [4.93, 52.92], [4.84, 52.88], [4.80, 52.92], [4.74, 52.96]]] } },
+        { type: "Feature", properties: { name: "Zuid-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.43, 52.24], [4.40, 52.20], [4.38, 52.14], [4.28, 52.11], [4.30, 52.08], [4.17, 52.02], [4.12, 51.98], [4.03, 51.96], [4.10, 51.91], [3.93, 51.81], [4.16, 51.76], [4.35, 51.68], [4.44, 51.69], [4.63, 51.70], [4.67, 51.81], [4.77, 51.82], [4.97, 51.83], [5.09, 51.89], [4.85, 51.95], [4.71, 52.02], [4.66, 52.13], [4.49, 52.16], [4.43, 52.24]]] } },
+        { type: "Feature", properties: { name: "Zeeland" }, geometry: { type: "MultiPolygon", coordinates: [[[[3.69, 51.72], [3.78, 51.76], [3.98, 51.74], [4.13, 51.66], [3.97, 51.64], [3.75, 51.67], [3.69, 51.72]]], [[[4.10, 51.62], [4.19, 51.64], [4.24, 51.58], [4.18, 51.50], [4.09, 51.54], [4.10, 51.62]]], [[[3.66, 51.58], [3.77, 51.60], [3.86, 51.57], [3.81, 51.54], [3.68, 51.55], [3.66, 51.58]]], [[[3.44, 51.53], [3.56, 51.60], [3.72, 51.54], [3.89, 51.53], [4.02, 51.50], [4.15, 51.44], [4.22, 51.40], [4.12, 51.38], [3.92, 51.42], [3.69, 51.44], [3.58, 51.45], [3.48, 51.49], [3.44, 51.53]]], [[[3.37, 51.37], [3.56, 51.40], [3.71, 51.37], [3.83, 51.34], [3.98, 51.35], [4.13, 51.36], [4.21, 51.30], [4.08, 51.24], [3.84, 51.23], [3.57, 51.23], [3.36, 51.22], [3.37, 51.37]]]] } },
+        { type: "Feature", properties: { name: "Noord-Brabant" }, geometry: { type: "Polygon", coordinates: [[[4.28, 51.42], [4.29, 51.50], [4.32, 51.59], [4.44, 51.69], [4.86, 51.70], [5.06, 51.69], [5.30, 51.70], [5.52, 51.77], [5.74, 51.76], [5.88, 51.73], [5.95, 51.65], [5.97, 51.56], [5.79, 51.46], [5.71, 51.38], [5.62, 51.31], [5.46, 51.35], [5.32, 51.29], [5.22, 51.37], [4.93, 51.44], [4.66, 51.47], [4.46, 51.53], [4.28, 51.42]]] } },
+        { type: "Feature", properties: { name: "Limburg" }, geometry: { type: "Polygon", coordinates: [[[5.88, 51.75], [5.97, 51.70], [6.04, 51.60], [6.18, 51.47], [6.17, 51.37], [6.13, 51.34], [6.08, 51.28], [5.99, 51.19], [5.87, 51.10], [5.86, 51.00], [5.83, 50.97], [5.80, 50.94], [5.75, 50.88], [5.69, 50.85], [5.70, 50.78], [5.89, 50.81], [6.02, 50.77], [6.06, 50.86], [5.98, 50.89], [6.03, 50.91], [5.97, 50.95], [5.86, 51.00], [5.88, 51.14], [5.71, 51.25], [5.88, 51.35], [6.05, 51.45], [5.98, 51.53], [5.97, 51.70], [5.88, 51.75]]] } }
+      ]
+    };
+
+    /* ==========================================================================
+       3. GELUID EN DUURZAME SPRAAK (WEB AUDIO API & SPEECH SYNTHESIS)
+       ========================================================================== */
+    let audioCtx = null;
+    let soundEnabled = true;
+    let currentSpeechToken = 0;
+    let preferredDutchVoice = null;
+
+    function unlockAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      if ('speechSynthesis' in window && !preferredDutchVoice) {
+        initVoices();
+      }
+    }
+
+    // Luister direct naar eerste actie om audio en stem te ontgrendelen
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    function initVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      preferredDutchVoice = voices.find(v => v.lang === 'nl-NL' || v.lang.startsWith('nl')) || null;
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = initVoices;
+      initVoices();
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('btnToggleSound');
+      btn.textContent = soundEnabled ? '🔊' : '🔇';
+      btn.classList.toggle('opacity-50', !soundEnabled);
+      if (!soundEnabled) {
+        stopAllSpeech();
+      }
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      unlockAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(780, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1318.5, now);
+        osc.frequency.setValueAtTime(1760.0, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(190, now);
+        osc.frequency.linearRampToValueAtTime(130, now + 0.22);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'win') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const chordOsc = audioCtx.createOscillator();
+          const chordGain = audioCtx.createGain();
+          chordOsc.connect(chordGain);
+          chordGain.connect(audioCtx.destination);
+          chordOsc.type = 'triangle';
+          chordOsc.frequency.setValueAtTime(freq, now + i * 0.09);
+          chordGain.gain.setValueAtTime(0.2, now + i * 0.09);
+          chordGain.gain.exponentialRampToValueAtTime(0.01, now + 0.7 + i * 0.09);
+          chordOsc.start(now + i * 0.09);
+          chordOsc.stop(now + 0.8 + i * 0.09);
+        });
+      }
+    }
+
+    function stopAllSpeech() {
+      currentSpeechToken++;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setSpeakingButtonUI(false);
+    }
+
+    function setSpeakingButtonUI(isSpeaking) {
+      const btn = document.getElementById('btnPronounce');
+      const label = document.getElementById('pronounceLabel');
+      if (!btn || !label) return;
+      if (isSpeaking) {
+        btn.classList.add('speaking-wave');
+        label.textContent = "Spreekt... 🔊";
+      } else {
+        btn.classList.remove('speaking-wave');
+        label.textContent = "Spreek uit";
+      }
+    }
+
+    // Asynchrone Nederlandse spraak
+    function speakDutch(text) {
+      return new Promise((resolve) => {
+        if (!soundEnabled || !('speechSynthesis' in window)) {
+          resolve();
+          return;
+        }
+
+        unlockAudio();
+        stopAllSpeech();
+        const thisToken = ++currentSpeechToken;
+        setSpeakingButtonUI(true);
+
+        let isFinished = false;
+        const complete = () => {
+          if (!isFinished) {
+            isFinished = true;
+            if (thisToken === currentSpeechToken) {
+              setSpeakingButtonUI(false);
+            }
+            resolve();
+          }
+        };
+
+        const timeout = setTimeout(complete, 4500);
+
+        try {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'nl-NL';
+          utterance.rate = 0.95;
+          utterance.pitch = 1.05;
+
+          if (preferredDutchVoice) {
+            utterance.voice = preferredDutchVoice;
+          }
+
+          utterance.onend = () => {
+            clearTimeout(timeout);
+            complete();
+          };
+
+          utterance.onerror = () => {
+            clearTimeout(timeout);
+            complete();
+          };
+
+          window.speechSynthesis.speak(utterance);
+
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+        } catch (e) {
+          clearTimeout(timeout);
+          complete();
+        }
+      });
+    }
+
+    /* ==========================================================================
+       4. SPELTOESTAND & MODI BEHEER
+       ========================================================================== */
+    let currentMode = 'explore'; // 'explore', 'locate', 'spell'
+    let selectedWater = null;
+    let targetWater = null;
+    let quizQueue = [];
+    let scoreStars = 0;
+    let currentStreak = 0;
+    let totalQuestionsAnswered = 0;
+    let totalCorrectAnswers = 0;
+    
+    // Onafhankelijke registratie per spelmodus
+    let exploredSet = new Set();          // Voor Oefenen & Verkennen
+    let locateCompletedSet = new Set();   // Voor Aanwijzen quiz
+    let spellCompletedSet = new Set();    // Voor Spellen quiz
+    let isProcessingAnswer = false;
+
+    let spellSubmode = 'tiles'; // 'tiles' of 'typing'
+    let spellingUserLetters = [];
+    let spellingTiles = [];
+
+    let d3Projection = null;
+    let d3Svg = null;
+    let d3ZoomBehavior = null;
+
+    /* ==========================================================================
+       5. KAART GENERATIE MET D3.JS & OFFICIËLE GEOJSON
+       ========================================================================== */
+    async function initD3Map() {
+      d3Svg = d3.select("#svgNederland");
+      const spinner = document.getElementById("mapLoadingSpinner");
+      if (spinner) spinner.style.opacity = "1";
+
+      // 1. Officiële GeoJSON ophalen via CDN
+      let geoData = null;
+      const cdnEndpoints = [
+        "https://raw.githubusercontent.com/creharmony/geojson-netherlands-provinces/master/provinces.geojson",
+        "https://cdn.jsdelivr.net/gh/codeforgermany/click_that_hood@master/public/data/the-netherlands.geojson"
+      ];
+
+      for (const url of cdnEndpoints) {
+        try {
+          const res = await d3.json(url);
+          if (res && res.features && res.features.length >= 11) {
+            geoData = res;
+            break;
+          }
+        } catch (err) {
+          console.warn("CDN fetch poging niet gelukt:", url, err);
+        }
+      }
+
+      // Val terug op ingebouwde anatomische data indien CDN onbereikbaar is
+      if (!geoData || !geoData.features) {
+        geoData = BACKUP_PROVINCES_GEOJSON;
+      }
+
+      // 2. D3 Mercator projectie gecentreerd op Nederland
+      d3Projection = d3.geoMercator()
+        .center([5.3, 52.1])
+        .fitExtent([[30, 30], [770, 930]], geoData);
+
+      const pathGenerator = d3.geoPath().projection(d3Projection);
+
+      // Verberg loading spinner
+      if (spinner) {
+        spinner.style.opacity = "0";
+        setTimeout(() => spinner.style.display = "none", 350);
+      }
+
+      // Noordzee zeeoppervlak direct klikbaar maken
+      d3.select("#rectNorthSea").on("click", (e) => handleAreaClick(11, e));
+
+      // 3. Zeeën & Meren oppervlakten
+      const seasLayer = d3.select("#layerSeasLakes");
+      seasLayer.selectAll("*").remove();
+
+      // Waddenzee (IV)
+      const waddenCoords = WATER_GEOMETRIES.waddenzee.map(d3Projection);
+      seasLayer.append("path")
+        .attr("id", "area-waddenzee")
+        .attr("d", d3.line().curve(d3.curveBasisClosed)(waddenCoords))
+        .attr("fill", "#60a5fa")
+        .attr("opacity", 0.45)
+        .attr("stroke", "#38bdf8")
+        .attr("stroke-width", 2)
+        .attr("class", "cursor-pointer transition-colors")
+        .on("click", (e) => handleAreaClick(4, e));
+
+      // IJsselmeer (XV)
+      const ijsselmeerCoords = WATER_GEOMETRIES.ijsselmeer.map(d3Projection);
+      seasLayer.append("path")
+        .attr("id", "area-ijsselmeer")
+        .attr("d", d3.line().curve(d3.curveBasisClosed)(ijsselmeerCoords))
+        .attr("fill", "#38bdf8")
+        .attr("opacity", 0.82)
+        .attr("stroke", "#0284c7")
+        .attr("stroke-width", 2.5)
+        .attr("class", "cursor-pointer transition-colors")
+        .on("click", (e) => handleAreaClick(15, e));
+
+      // Veluwemeer (XIII)
+      const veluweCoords = WATER_GEOMETRIES.veluwemeer.map(d3Projection);
+      seasLayer.append("path")
+        .attr("id", "path-water-13")
+        .attr("d", d3.line().curve(d3.curveBasis)(veluweCoords))
+        .attr("fill", "none")
+        .attr("stroke", "#38bdf8")
+        .attr("stroke-width", 8)
+        .attr("stroke-linecap", "round")
+        .attr("class", "cursor-pointer transition-all")
+        .on("click", (e) => handleAreaClick(13, e));
+
+      // 4. De Provincies tekenen
+      const provLayer = d3.select("#layerProvinces");
+      provLayer.selectAll("*").remove();
+
+      provLayer.selectAll(".province")
+        .data(geoData.features)
+        .enter()
+        .append("path")
+        .attr("class", "province transition-all duration-200")
+        .attr("d", pathGenerator)
+        .attr("fill", (d, idx) => {
+          const name = d.properties.name || d.properties.statnaam || d.properties.provincienaam || "";
+          return PROVINCE_COLORS[name] || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
+        })
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2.2)
+        .attr("stroke-linejoin", "round")
+        .on("pointerenter", function() {
+          d3.select(this).attr("stroke-width", 3.8).attr("stroke", "#f1c40f");
+        })
+        .on("pointerleave", function() {
+          d3.select(this).attr("stroke-width", 2.2).attr("stroke", "#ffffff");
+        });
+
+      // 5. Dijken en Rivieren
+      const riversLayer = d3.select("#layerRivers");
+      riversLayer.selectAll("*").remove();
+
+      // Afsluitdijk
+      riversLayer.append("path")
+        .attr("d", d3.line()(WATER_GEOMETRIES.afsluitdijk.map(d3Projection)))
+        .attr("stroke", "#334155")
+        .attr("stroke-width", 4.5)
+        .attr("stroke-linecap", "round");
+
+      // Houtribdijk
+      riversLayer.append("path")
+        .attr("d", d3.line()(WATER_GEOMETRIES.houtribdijk.map(d3Projection)))
+        .attr("stroke", "#475569")
+        .attr("stroke-dasharray", "5, 3");
+
+      // Rivierdefinities
+      const riverDefinitions = [
+        { id: 17, path: WATER_GEOMETRIES.rijn, width: 7.5 },
+        { id: 10, path: WATER_GEOMETRIES.waal, width: 8.5 },
+        { id: 16, path: WATER_GEOMETRIES.nederrijn, width: 7 },
+        { id: 6,  path: WATER_GEOMETRIES.lek, width: 7 },
+        { id: 12, path: WATER_GEOMETRIES.nieuweWaterweg, width: 8 },
+        { id: 8,  path: WATER_GEOMETRIES.ijssel, width: 6.5 },
+        { id: 2,  path: WATER_GEOMETRIES.maas, width: 7.5 },
+        { id: 3,  path: WATER_GEOMETRIES.amsterdamRijnkanaal, width: 6 },
+        { id: 9,  path: WATER_GEOMETRIES.noordzeekanaal, width: 6.5 },
+        { id: 14, path: WATER_GEOMETRIES.twentekanaal, width: 6 },
+        { id: 1,  path: WATER_GEOMETRIES.scheldeRijnkanaal, width: 6 }
+      ];
+
+      riverDefinitions.forEach(item => {
+        const coords = item.path.map(d3Projection);
+        const curveGenerator = d3.line().curve(d3.curveCatmullRom);
+
+        riversLayer.append("path")
+          .attr("id", `path-water-${item.id}`)
+          .attr("d", curveGenerator(coords))
+          .attr("fill", "none")
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", item.width)
+          .attr("stroke-linecap", "round")
+          .attr("stroke-linejoin", "round")
+          .attr("class", "cursor-pointer transition-all");
+
+        // Brede interactieve trefzone
+        riversLayer.append("path")
+          .attr("d", curveGenerator(coords))
+          .attr("fill", "none")
+          .attr("stroke", "transparent")
+          .attr("stroke-width", Math.max(32, item.width + 22))
+          .attr("class", "cursor-pointer")
+          .on("click", (e) => handleAreaClick(item.id, e));
+      });
+
+      // Zeearmen (Westerschelde en Oosterschelde)
+      const zeearmen = [
+        { id: 5, path: WATER_GEOMETRIES.westerschelde, width: 9.5 },
+        { id: 7, path: WATER_GEOMETRIES.oosterschelde, width: 10.5 }
+      ];
+
+      zeearmen.forEach(item => {
+        const coords = item.path.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", `path-water-${item.id}`)
+          .attr("d", d3.line().curve(d3.curveBasis)(coords))
+          .attr("fill", "none")
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", item.width)
+          .attr("stroke-linecap", "round")
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", (e) => handleAreaClick(item.id, e));
+      });
+
+      // 6. Coördinaten projecteren voor alle 17 Water Pins
+      WATERS_DATA.forEach(water => {
+        const [px, py] = d3Projection([water.lng, water.lat]);
+        water.x = px;
+        water.y = py;
+      });
+
+      // 7. Pins renderen op exacte geprojecteerde posities
+      renderPinsLayer();
+
+      // 8. Zoom & Pan gedrag initialiseren
+      setupZoomBehavior();
+    }
+
+    function renderPinsLayer() {
+      const pinsLayer = d3.select("#layerPins");
+      pinsLayer.selectAll("*").remove();
+
+      const pinGroups = pinsLayer.selectAll(".map-pin")
+        .data(WATERS_DATA, d => d.id)
+        .enter()
+        .append("g")
+        .attr("id", d => `pin-group-${d.id}`)
+        .attr("class", "map-pin")
+        .attr("transform", d => `translate(${d.x}, ${d.y})`)
+        .on("click", function(event, d) {
+          event.stopPropagation();
+          onSelectWater(d);
+        });
+
+      // Touchzone
+      pinGroups.append("circle")
+        .attr("r", 34)
+        .attr("fill", "transparent")
+        .attr("class", "cursor-pointer");
+
+      // Cyaan/waterblauwe ronde waterbadge
+      pinGroups.append("circle")
+        .attr("class", "pin-circle shadow-lg")
+        .attr("r", 15)
+        .attr("fill", "#0284c7")
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2.5);
+
+      // Golflijntjes in de badge
+      pinGroups.append("path")
+        .attr("d", "M -7 -4 Q -3.5 -6 0 -4 T 7 -4 M -7 0 Q -3.5 -2 0 0 T 7 0 M -7 4 Q -3.5 2 0 4 T 7 4")
+        .attr("fill", "none")
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 1.6)
+        .attr("stroke-linecap", "round");
+
+      // Romeins cijfer tekstje boven de waterbadge
+      const label = pinGroups.append("g")
+        .attr("transform", "translate(0, -22)");
+
+      label.append("rect")
+        .attr("class", "pin-label-rect shadow-sm")
+        .attr("x", -18)
+        .attr("y", -11)
+        .attr("width", 36)
+        .attr("height", 17)
+        .attr("rx", 6)
+        .attr("fill", "#ffffff")
+        .attr("stroke", "#0284c7")
+        .attr("stroke-width", 1.8);
+
+      label.append("text")
+        .attr("class", "pin-label-text")
+        .attr("text-anchor", "middle")
+        .attr("y", 2)
+        .attr("font-family", "Fredoka, sans-serif")
+        .attr("font-size", "11px")
+        .attr("font-weight", "bold")
+        .attr("fill", "#0c4a6e")
+        .text(d => d.roman);
+    }
+
+    function setupZoomBehavior() {
+      const zoomContainer = d3.select("#zoomContainer");
+
+      d3ZoomBehavior = d3.zoom()
+        .scaleExtent([1, 4.5])
+        .translateExtent([[-200, -200], [1000, 1160]])
+        .filter(event => event.type !== 'dblclick')
+        .on("zoom", (event) => {
+          zoomContainer.attr("transform", event.transform);
+        });
+
+      d3Svg.call(d3ZoomBehavior);
+
+      document.getElementById('btnZoomIn').onclick = (e) => {
+        e.stopPropagation();
+        unlockAudio();
+        d3Svg.transition().duration(300).call(d3ZoomBehavior.scaleBy, 1.35);
+      };
+
+      document.getElementById('btnZoomOut').onclick = (e) => {
+        e.stopPropagation();
+        unlockAudio();
+        d3Svg.transition().duration(300).call(d3ZoomBehavior.scaleBy, 0.75);
+      };
+
+      document.getElementById('btnZoomReset').onclick = (e) => {
+        e.stopPropagation();
+        unlockAudio();
+        d3Svg.transition().duration(350).call(d3ZoomBehavior.transform, d3.zoomIdentity);
+      };
+    }
+
+    function handleAreaClick(waterId, event) {
+      if (event) event.stopPropagation();
+      const water = WATERS_DATA.find(w => w.id === waterId);
+      if (water) {
+        onSelectWater(water);
+      }
+    }
+
+    /* ==========================================================================
+       6. ZONE HIGHLIGHTING & VISUELE INDICATOREN
+       ========================================================================== */
+    function highlightZone(water, status = 'active', showArrow = true) {
+      const layer = d3.select("#layerHighlights");
+      layer.selectAll("*").remove();
+
+      d3.selectAll(".highlight-flowing-river").classed("highlight-flowing-river", false);
+      d3.selectAll(".active-target").classed("active-target", false);
+
+      if (!water) return;
+
+      const px = water.x;
+      const py = water.y;
+
+      // 1. Pulserende radar om de zone
+      layer.append("circle")
+        .attr("cx", px)
+        .attr("cy", py)
+        .attr("class", "radar-beacon")
+        .attr("stroke", status === 'correct' ? '#2ecc71' : '#f39c12');
+
+      // 2. Vloeiend geel oplichten van de rivier of het waterlichaam
+      const pathEl = d3.select(`#path-water-${water.id}`);
+      if (!pathEl.empty()) {
+        pathEl.classed("highlight-flowing-river", true);
+      }
+
+      if (water.id === 15) {
+        d3.select("#area-ijsselmeer").classed("highlight-flowing-river", true);
+      } else if (water.id === 4) {
+        d3.select("#area-waddenzee").classed("highlight-flowing-river", true);
+      }
+
+      // 3. Markeer de Pin
+      const pin = d3.select(`#pin-group-${water.id}`);
+      if (!pin.empty()) {
+        pin.classed(status === 'correct' ? 'answered-correct' : 'active-target', true);
+      }
+
+      // 4. Bouncende pijl
+      if (showArrow) {
+        const arrowGroup = layer.append("g")
+          .attr("transform", `translate(${px}, ${py - 32})`)
+          .attr("class", "jumping-arrow");
+
+        arrowGroup.append("rect")
+          .attr("x", -24)
+          .attr("y", -30)
+          .attr("width", 48)
+          .attr("height", 22)
+          .attr("rx", 11)
+          .attr("fill", "#f39c12")
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 2);
+
+        arrowGroup.append("text")
+          .attr("text-anchor", "middle")
+          .attr("y", -15)
+          .attr("font-family", "Fredoka, sans-serif")
+          .attr("font-size", "11px")
+          .attr("font-weight", "bold")
+          .attr("fill", "#ffffff")
+          .text("HIER!");
+
+        arrowGroup.append("polygon")
+          .attr("points", "0,-2 -7,-10 7,-10")
+          .attr("fill", "#f39c12");
+      }
+    }
+
+    /* ==========================================================================
+       7. SPELMODI LOGICA (VERKENNEN, AANWIJZEN, SPELLEN)
+       ========================================================================== */
+    function setMode(mode) {
+      currentMode = mode;
+      isProcessingAnswer = false;
+      stopAllSpeech();
+      unlockAudio();
+
+      const modes = ['explore', 'locate', 'spell'];
+      modes.forEach(m => {
+        const btn = document.getElementById(`mode${m.charAt(0).toUpperCase() + m.slice(1)}`);
+        if (m === mode) {
+          btn.className = "px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-sm bg-white text-sky-950";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-sky-800 hover:text-sky-950";
+        }
+      });
+
+      const spellingPanel = document.getElementById('spellingPanel');
+      if (mode === 'spell') {
+        spellingPanel.classList.remove('hidden');
+        spellingPanel.classList.add('flex');
+      } else {
+        spellingPanel.classList.add('hidden');
+        spellingPanel.classList.remove('flex');
+      }
+
+      if (mode === 'explore') {
+        startExploreMode();
+      } else if (mode === 'locate') {
+        startLocateMode();
+      } else if (mode === 'spell') {
+        startSpellingMode();
+      }
+    }
+
+    function restartCurrentMode() {
+      setMode(currentMode);
+    }
+
+    /* ---------------- MODUS 1: OEFENEN & VERKENNEN ---------------- */
+    function startExploreMode() {
+      selectedWater = null;
+      targetWater = null;
+      highlightZone(null);
+
+      document.getElementById('badgeIcon').textContent = "🔍";
+      document.getElementById('badgeTitle').textContent = "Oefenen & Verkennen";
+      document.getElementById('badgeSubtitle').textContent = "Tik op een nummer op de kaart";
+
+      document.getElementById('questionPrompt').textContent = "Klik op een water op de kaart om de naam te horen!";
+      document.getElementById('questionSubtext').textContent = "Je leert waar het ligt, het Romeinse cijfer en de juiste spelling.";
+
+      document.getElementById('feedbackIcon').textContent = "💡";
+      document.getElementById('feedbackText').textContent = "Tip: Je kunt inzoomen met de knoppen rechtsboven om de rivieren van dichtbij te bekijken.";
+
+      updateStatsDisplay();
+    }
+
+    function exploreWater(water) {
+      selectedWater = water;
+      exploredSet.add(water.id);
+      playSound('tap');
+
+      highlightZone(water, 'active', true);
+
+      document.getElementById('badgeIcon').textContent = "🌊";
+      document.getElementById('badgeTitle').textContent = `Nummer ${water.roman}`;
+      document.getElementById('badgeSubtitle').textContent = `${water.article.toUpperCase()} ${water.type.toUpperCase()}`;
+
+      document.getElementById('questionPrompt').innerHTML = `<span class="text-sky-600 font-bold">${water.article}</span> <span class="text-sky-950 font-black text-xl sm:text-2xl">${water.name}</span>`;
+      document.getElementById('questionSubtext').textContent = water.desc;
+
+      document.getElementById('feedbackIcon').textContent = "ℹ️";
+      document.getElementById('feedbackText').innerHTML = `Romeins cijfer <strong>${water.roman}</strong> = <strong>${water.name}</strong> (${water.desc})`;
+
+      updateStatsDisplay();
+      speakDutch(`${water.article} ${water.name}`);
+    }
+
+    /* ---------------- MODUS 2: AANWIJZEN ---------------- */
+    function startLocateMode() {
+      selectedWater = null;
+      quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
+      locateCompletedSet.clear();
+      totalQuestionsAnswered = 0;
+      totalCorrectAnswers = 0;
+
+      d3.selectAll(".map-pin").classed("correct-flash answered-correct active-target wrong-shake", false);
+      highlightZone(null);
+
+      document.getElementById('badgeIcon').textContent = "🎯";
+      document.getElementById('badgeTitle').textContent = "Aanwijzen";
+      document.getElementById('badgeSubtitle').textContent = "Zoek het juiste nummer op de kaart";
+
+      nextLocateQuestion();
+    }
+
+    async function nextLocateQuestion() {
+      if (quizQueue.length === 0) {
+        showVictoryScreen();
+        return;
+      }
+
+      targetWater = quizQueue[0];
+
+      d3.selectAll(".map-pin").classed("correct-flash answered-correct active-target wrong-shake", false);
+      highlightZone(null);
+
+      const promptHtml = `Waar ligt <span class="text-sky-600 font-black">${targetWater.article}</span> <span class="text-sky-950 font-black text-xl sm:text-2xl">${targetWater.name}</span>?`;
+      document.getElementById('questionPrompt').innerHTML = promptHtml;
+      document.getElementById('questionSubtext').textContent = "Kies uit alle 17 Romeinse cijfers op de kaart.";
+
+      document.getElementById('feedbackIcon').textContent = "🎯";
+      document.getElementById('feedbackText').innerHTML = `Zoek <strong>${targetWater.article} ${targetWater.name}</strong> en klik op de juiste pin.`;
+
+      updateStatsDisplay();
+
+      await speakDutch(`Waar ligt ${targetWater.article} ${targetWater.name}?`);
+    }
+
+    async function handleLocateAttempt(clickedWater) {
+      if (!targetWater || isProcessingAnswer) return;
+
+      const card = document.getElementById('cardInteractive');
+      const clickedPin = d3.select(`#pin-group-${clickedWater.id}`);
+
+      if (clickedWater.id === targetWater.id) {
+        isProcessingAnswer = true;
+        totalQuestionsAnswered++;
+        totalCorrectAnswers++;
+        currentStreak++;
+        scoreStars += 10;
+        locateCompletedSet.add(clickedWater.id);
+        playSound('correct');
+
+        clickedPin.classed('correct-flash', true);
+        highlightZone(clickedWater, 'correct', false);
+
+        document.getElementById('feedbackIcon').textContent = "🎉";
+        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Goed zo!</span> Dat is inderdaad ${targetWater.article} <strong>${targetWater.name}</strong> (${targetWater.roman})!`;
+
+        updateStatsDisplay();
+
+        await speakDutch(`Goed zo! Dat is ${targetWater.article} ${targetWater.name}`);
+        await new Promise(r => setTimeout(r, 600));
+
+        quizQueue.shift();
+        isProcessingAnswer = false;
+        
+        nextLocateQuestion();
+      } else {
+        totalQuestionsAnswered++;
+        currentStreak = 0;
+        playSound('wrong');
+
+        clickedPin.classed('wrong-shake', true);
+        setTimeout(() => clickedPin.classed('wrong-shake', false), 550);
+
+        card.classList.remove('shake-animation');
+        void card.offsetWidth;
+        card.classList.add('shake-animation');
+
+        document.getElementById('feedbackIcon').textContent = "❌";
+        document.getElementById('feedbackText').innerHTML = `<span class="text-rose-600 font-black">Nee, helaas!</span> Nummer <strong>${clickedWater.roman}</strong> is ${clickedWater.article} <strong>${clickedWater.name}</strong>.<br><span class="text-sky-800 font-bold">Probeer het nog eens: Waar ligt ${targetWater.article} <strong class="text-amber-800">${targetWater.name}</strong>?</span>`;
+
+        updateStatsDisplay();
+
+        await speakDutch(`Nee, dat was nummer ${clickedWater.roman}. Probeer het nog eens! Waar ligt ${targetWater.article} ${targetWater.name}?`);
+        
+        isProcessingAnswer = false;
+      }
+    }
+
+    /* ---------------- MODUS 3: TOPO SPELLING KAMPIOEN ---------------- */
+    function startSpellingMode() {
+      selectedWater = null;
+      quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
+      spellCompletedSet.clear();
+      totalQuestionsAnswered = 0;
+      totalCorrectAnswers = 0;
+
+      document.getElementById('badgeIcon').textContent = "✏️";
+      document.getElementById('badgeTitle').textContent = "Spelling Kampioen";
+      document.getElementById('badgeSubtitle').textContent = "Hoe spel je het aangegeven water?";
+
+      nextSpellingQuestion();
+    }
+
+    async function nextSpellingQuestion() {
+      if (quizQueue.length === 0) {
+        showVictoryScreen();
+        return;
+      }
+
+      targetWater = quizQueue[0];
+      highlightZone(targetWater, 'active', true);
+
+      document.getElementById('spellTargetRomanBadge').textContent = `Nummer ${targetWater.roman}`;
+      document.getElementById('questionPrompt').innerHTML = `Hoe spel je het aangegeven water bij <span class="text-sky-600 font-black">Nummer ${targetWater.roman}</span>?`;
+      document.getElementById('questionSubtext').textContent = "Kijk naar de gemarkeerde zone op de kaart.";
+
+      document.getElementById('feedbackIcon').textContent = "💡";
+      document.getElementById('feedbackText').textContent = "Vul de letters in met de tegels of typ ze zelf via het toetsenbord.";
+
+      initSpellingSlots();
+      updateStatsDisplay();
+
+      await speakDutch("Hoe spel je het aangegeven water?");
+    }
+
+    function setSpellSubmode(submode) {
+      spellSubmode = submode;
+      const btnTiles = document.getElementById('btnSpellSubTiles');
+      const btnTyping = document.getElementById('btnSpellSubTyping');
+      const containerTiles = document.getElementById('spellTilesBankContainer');
+      const containerTyping = document.getElementById('spellTypingInputContainer');
+
+      if (submode === 'tiles') {
+        btnTiles.className = "px-3 py-1 rounded-xl text-xs font-black transition-all bg-white text-sky-950 shadow-sm";
+        btnTyping.className = "px-3 py-1 rounded-xl text-xs font-black transition-all text-sky-800 hover:text-sky-950";
+        containerTiles.classList.remove('hidden');
+        containerTyping.classList.add('hidden');
+      } else {
+        btnTyping.className = "px-3 py-1 rounded-xl text-xs font-black transition-all bg-white text-sky-950 shadow-sm";
+        btnTiles.className = "px-3 py-1 rounded-xl text-xs font-black transition-all text-sky-800 hover:text-sky-950";
+        containerTyping.classList.remove('hidden');
+        containerTiles.classList.add('hidden');
+        
+        setTimeout(() => {
+          const input = document.getElementById('spellTextInput');
+          if (input) input.focus();
+        }, 150);
+      }
+    }
+
+    function initSpellingSlots() {
+      const target = targetWater.name;
+      spellingUserLetters = [];
+
+      for (let i = 0; i < target.length; i++) {
+        const ch = target[i];
+        if (ch === '-' || ch === ' ') {
+          spellingUserLetters.push(ch);
+        } else {
+          spellingUserLetters.push('');
+        }
+      }
+
+      const targetLetters = target.split('').filter(c => c !== '-' && c !== ' ').map(c => c.toUpperCase());
+      const alphabet = "AAEEIOOUUBDFGHKLMNPRSTVWZ";
+      const extraCount = Math.max(3, 14 - targetLetters.length);
+      for (let i = 0; i < extraCount; i++) {
+        targetLetters.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+      }
+
+      targetLetters.sort(() => Math.random() - 0.5);
+      spellingTiles = targetLetters.map((char, index) => ({ id: index, char, used: false }));
+
+      const inputEl = document.getElementById('spellTextInput');
+      if (inputEl) inputEl.value = '';
+
+      renderSpellingSlots();
+      renderLetterTilesBank();
+    }
+
+    function renderSpellingSlots() {
+      const container = document.getElementById('letterSlotsContainer');
+      container.innerHTML = '';
+      const target = targetWater.name;
+
+      let filledCount = 0;
+      let totalCharCount = 0;
+
+      for (let i = 0; i < target.length; i++) {
+        const expected = target[i];
+        const current = spellingUserLetters[i];
+
+        if (expected === '-' || expected === ' ') {
+          const sep = document.createElement('div');
+          sep.className = "w-4 flex items-center justify-center font-black text-sky-800 text-lg";
+          sep.textContent = expected;
+          container.appendChild(sep);
+        } else {
+          totalCharCount++;
+          if (current) filledCount++;
+
+          const slot = document.createElement('div');
+          slot.className = `w-7 h-9 sm:w-8 sm:h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm sm:text-base transition-all ${
+            current 
+              ? 'bg-sky-500 border-sky-600 text-white shadow-sm scale-105' 
+              : 'bg-white border-sky-300 text-sky-950'
+          }`;
+          slot.textContent = current ? current.toUpperCase() : '';
+          container.appendChild(slot);
+        }
+      }
+
+      document.getElementById('spellLettersCount').textContent = `${filledCount} / ${totalCharCount} letters`;
+    }
+
+    function renderLetterTilesBank() {
+      const container = document.getElementById('letterTilesBank');
+      container.innerHTML = '';
+
+      spellingTiles.forEach(tile => {
+        const btn = document.createElement('button');
+        btn.className = `w-8 h-9 sm:w-9 sm:h-10 rounded-xl font-black text-sm transition-all flex items-center justify-center shadow-sm active:scale-90 ${
+          tile.used 
+            ? 'opacity-20 bg-slate-100 text-slate-400 cursor-not-allowed' 
+            : 'bg-gradient-to-b from-white to-sky-50 border-2 border-sky-200 text-sky-950 hover:border-sky-400 hover:bg-sky-100'
+        }`;
+        btn.textContent = tile.char;
+        btn.disabled = tile.used;
+        btn.onclick = () => handleTileClick(tile);
+        container.appendChild(btn);
+      });
+    }
+
+    async function handleTileClick(tile) {
+      if (isProcessingAnswer || tile.used) return;
+      playSound('tap');
+
+      const target = targetWater.name;
+      let targetIdx = -1;
+
+      for (let i = 0; i < target.length; i++) {
+        if (target[i] !== '-' && target[i] !== ' ' && !spellingUserLetters[i]) {
+          targetIdx = i;
+          break;
+        }
+      }
+      if (targetIdx === -1) return;
+
+      const expectedChar = target[targetIdx];
+      if (tile.char.toUpperCase() === expectedChar.toUpperCase()) {
+        spellingUserLetters[targetIdx] = expectedChar;
+        tile.used = true;
+
+        renderSpellingSlots();
+        renderLetterTilesBank();
+
+        checkSpellingCompletion();
+      } else {
+        playSound('wrong');
+        const card = document.getElementById('cardInteractive');
+        card.classList.remove('shake-animation');
+        void card.offsetWidth;
+        card.classList.add('shake-animation');
+
+        document.getElementById('feedbackIcon').textContent = "⚠️";
+        document.getElementById('feedbackText').textContent = "Oeps! Die letter hoort hier niet. Probeer een andere!";
+      }
+    }
+
+    function handleSpellBackspace() {
+      if (isProcessingAnswer) return;
+      playSound('tap');
+
+      const target = targetWater.name;
+      let lastIdx = -1;
+
+      for (let i = target.length - 1; i >= 0; i--) {
+        if (target[i] !== '-' && target[i] !== ' ' && spellingUserLetters[i]) {
+          lastIdx = i;
+          break;
+        }
+      }
+
+      if (lastIdx !== -1) {
+        const removedChar = spellingUserLetters[lastIdx];
+        spellingUserLetters[lastIdx] = '';
+
+        const found = spellingTiles.find(t => t.used && t.char === removedChar.toUpperCase());
+        if (found) found.used = false;
+
+        renderSpellingSlots();
+        renderLetterTilesBank();
+      }
+    }
+
+    const spellInputEl = document.getElementById('spellTextInput');
+    spellInputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        checkTypedSpelling();
+      }
+    });
+
+    spellInputEl.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/[^a-zA-Z\- ]/g, '');
+      const target = targetWater.name;
+      
+      let letterPointer = 0;
+      for (let i = 0; i < target.length; i++) {
+        if (target[i] === '-' || target[i] === ' ') {
+          spellingUserLetters[i] = target[i];
+        } else {
+          spellingUserLetters[i] = letterPointer < val.length ? val[letterPointer] : '';
+          letterPointer++;
+        }
+      }
+      renderSpellingSlots();
+    });
+
+    async function checkTypedSpelling() {
+      if (currentMode !== 'spell' || !targetWater || isProcessingAnswer) return;
+      const inputEl = document.getElementById('spellTextInput');
+      const text = (inputEl.value || "").trim().toLowerCase();
+
+      if (!text) {
+        document.getElementById('feedbackIcon').textContent = "⚠️";
+        document.getElementById('feedbackText').textContent = "Typ eerst een naam in het invoerveld!";
+        inputEl.focus();
+        return;
+      }
+
+      const cleanUser = text.replace(/[^a-z]/g, '');
+      const cleanTarget = targetWater.name.toLowerCase().replace(/[^a-z]/g, '');
+
+      totalQuestionsAnswered++;
+
+      if (cleanUser === cleanTarget) {
+        spellingUserLetters = targetWater.name.split('');
+        renderSpellingSlots();
+        checkSpellingCompletion(true);
+      } else {
+        currentStreak = 0;
+        playSound('wrong');
+
+        const card = document.getElementById('cardInteractive');
+        card.classList.remove('shake-animation');
+        void card.offsetWidth;
+        card.classList.add('shake-animation');
+
+        document.getElementById('feedbackIcon').textContent = "❌";
+        document.getElementById('feedbackText').innerHTML = `Nog niet helemaal! Je typte: "<strong>${inputEl.value}</strong>". Probeer het nog eens of gebruik een hint!`;
+
+        updateStatsDisplay();
+        inputEl.focus();
+        inputEl.select();
+      }
+    }
+
+    async function checkSpellingCompletion(wasTyped = false) {
+      const target = targetWater.name;
+      if (spellingUserLetters.join('') === target) {
+        isProcessingAnswer = true;
+        totalCorrectAnswers++;
+        currentStreak++;
+        scoreStars += wasTyped ? 30 : 25;
+        spellCompletedSet.add(targetWater.id);
+
+        playSound('correct');
+        triggerConfetti();
+
+        document.getElementById('feedbackIcon').textContent = "🎉";
+        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Helemaal juist gespeld!</span> Het is inderdaad <strong>${targetWater.name}</strong>!`;
+
+        updateStatsDisplay();
+
+        await speakDutch(`Helemaal juist! ${targetWater.name}`);
+        await new Promise(r => setTimeout(r, 600));
+
+        quizQueue.shift();
+        isProcessingAnswer = false;
+        nextSpellingQuestion();
+      }
+    }
+
+    function showHint() {
+      unlockAudio();
+      playSound('tap');
+
+      if (currentMode === 'locate' && targetWater) {
+        highlightZone(targetWater, 'active', true);
+        document.getElementById('feedbackIcon').textContent = "💡";
+        document.getElementById('feedbackText').innerHTML = `Hint: <strong>${targetWater.name}</strong> ligt bij de pulserende cirkel!`;
+      } else if (currentMode === 'spell' && targetWater) {
+        highlightZone(targetWater, 'active', true);
+        const target = targetWater.name;
+        for (let i = 0; i < target.length; i++) {
+          if (target[i] !== '-' && target[i] !== ' ' && !spellingUserLetters[i]) {
+            const nextChar = target[i];
+            spellingUserLetters[i] = nextChar;
+            
+            const tile = spellingTiles.find(t => !t.used && t.char === nextChar.toUpperCase());
+            if (tile) tile.used = true;
+
+            renderSpellingSlots();
+            renderLetterTilesBank();
+            checkSpellingCompletion();
+            break;
+          }
+        }
+      } else if (selectedWater) {
+        highlightZone(selectedWater, 'active', true);
+      }
+    }
+
+    /* ==========================================================================
+       8. STATISTIEKEN & OVERZICHTSLIJST
+       ========================================================================== */
+    function updateStatsDisplay() {
+      document.getElementById('statStars').textContent = scoreStars;
+      document.getElementById('statStreak').textContent = currentStreak;
+
+      let progressRatio = 0;
+      let progressLabel = "0 / 17";
+
+      if (currentMode === 'explore') {
+        progressRatio = (exploredSet.size / 17);
+        progressLabel = `${exploredSet.size} / 17`;
+        document.getElementById('learnedCounter').textContent = `${exploredSet.size}/17 bekeken`;
+      } else if (currentMode === 'locate') {
+        progressRatio = (locateCompletedSet.size / 17);
+        progressLabel = `${locateCompletedSet.size} / 17`;
+        document.getElementById('learnedCounter').textContent = `${locateCompletedSet.size}/17 gevonden`;
+      } else if (currentMode === 'spell') {
+        progressRatio = (spellCompletedSet.size / 17);
+        progressLabel = `${spellCompletedSet.size} / 17`;
+        document.getElementById('learnedCounter').textContent = `${spellCompletedSet.size}/17 gespeld`;
+      }
+
+      document.getElementById('topProgressBar').style.width = `${Math.min(100, Math.round(progressRatio * 100))}%`;
+      document.getElementById('topProgressText').textContent = progressLabel;
+
+      renderWaterList();
+    }
+
+    function renderWaterList() {
+      const container = document.getElementById('waterListScroll');
+      container.innerHTML = '';
+      const titleEl = document.getElementById('waterListTitle');
+
+      /* MODUS 1: OEFENEN & VERKENNEN */
+      if (currentMode === 'explore') {
+        if (titleEl) titleEl.textContent = "Studielijst (17 Wateren)";
+
+        WATERS_DATA.forEach(w => {
+          const isExplored = exploredSet.has(w.id);
+          const isSelected = selectedWater && selectedWater.id === w.id;
+
+          const row = document.createElement('div');
+          row.className = `flex items-center justify-between p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+            isSelected 
+              ? 'bg-amber-100 border-amber-300 text-amber-950 font-black scale-[1.02] shadow-sm' 
+              : isExplored 
+                ? 'bg-sky-50 border-sky-200 text-sky-900 hover:bg-sky-100' 
+                : 'bg-white border-slate-100 text-slate-600 hover:bg-sky-50'
+          }`;
+
+          row.onclick = () => onSelectWater(w);
+
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-5 rounded-md bg-white border border-sky-300 text-sky-950 flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
+              <span class="font-extrabold text-sky-950">${w.name}</span>
+              <span class="text-[10px] text-slate-400 font-medium">(${w.article} ${w.type})</span>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-600">${isExplored ? '✓' : ''}</span>
+          `;
+
+          container.appendChild(row);
+        });
+        return;
+      }
+
+      /* MODUS 2: AANWIJZEN */
+      if (currentMode === 'locate') {
+        if (titleEl) titleEl.textContent = "Toets Voortgang (Aanwijzen)";
+
+        const totalWaters = WATERS_DATA.length;
+        const completedCount = locateCompletedSet.size;
+
+        for (let i = 1; i <= totalWaters; i++) {
+          const row = document.createElement('div');
+          
+          if (i <= completedCount) {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black">✓</span>
+                <span>Water ${i} van ${totalWaters}</span>
+              </div>
+              <span class="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md font-black">Juist aangewezen ⭐</span>
+            `;
+          } else if (i === completedCount + 1) {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 font-black text-xs animate-pulse";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-black">🎯</span>
+                <span>Huidige vraag (${i}/${totalWaters})</span>
+              </div>
+              <span class="text-[10px] text-amber-800 font-bold">Kies de pin op de kaart</span>
+            `;
+          } else {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-semibold text-xs";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold">🔒</span>
+                <span>Vraag ${i}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 font-medium">In de wachtrij</span>
+            `;
+          }
+
+          container.appendChild(row);
+        }
+        return;
+      }
+
+      /* MODUS 3: SPELLEN */
+      if (currentMode === 'spell') {
+        if (titleEl) titleEl.textContent = "Spelling Voortgang (17 Wateren)";
+
+        WATERS_DATA.forEach(w => {
+          const isCompleted = spellCompletedSet.has(w.id);
+          const isCurrentTarget = targetWater && targetWater.id === w.id;
+
+          const row = document.createElement('div');
+
+          if (isCompleted) {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-5 rounded-md bg-emerald-500 text-white flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
+                <span>Nummer ${w.roman}</span>
+              </div>
+              <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-lg text-[10px] font-black">⭐ Goed gespeld!</span>
+            `;
+          } else if (isCurrentTarget) {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 font-black text-xs animate-pulse shadow-sm";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-5 rounded-md bg-amber-400 text-amber-950 flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
+                <span>Nummer ${w.roman} (zie kaart)</span>
+              </div>
+              <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-lg text-[10px] font-bold">✏️ Nu spellen...</span>
+            `;
+          } else {
+            row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-medium text-xs";
+            row.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-5 rounded-md bg-white border border-slate-200 text-slate-400 flex items-center justify-center font-bold text-[10px]">${w.roman}</span>
+                <span>Nummer ${w.roman}</span>
+              </div>
+              <span class="text-[10px] font-bold text-slate-400">🔒 Nog niet geweest</span>
+            `;
+          }
+
+          container.appendChild(row);
+        });
+      }
+    }
+
+    function speakCurrentContext() {
+      unlockAudio();
+      if (currentMode === 'explore') {
+        if (selectedWater) {
+          speakDutch(`${selectedWater.article} ${selectedWater.name}`);
+        } else {
+          speakDutch("Klik op een nummer op de kaart.");
+        }
+      } else if (currentMode === 'locate') {
+        if (targetWater) {
+          speakDutch(`Waar ligt ${targetWater.article} ${targetWater.name}?`);
+        }
+      } else if (currentMode === 'spell') {
+        speakDutch("Hoe spel je het aangegeven water?");
+      }
+    }
+
+    /* ==========================================================================
+       9. INTERACTIE SELECTIE HANDLER (PINS, ZONES & OVERZICHT)
+       ========================================================================== */
+    function onSelectWater(water) {
+      if (!water) return;
+      unlockAudio();
+      if (currentMode === 'explore') {
+        exploreWater(water);
+      } else if (currentMode === 'locate') {
+        handleLocateAttempt(water);
+      } else if (currentMode === 'spell') {
+        if (targetWater && water.id === targetWater.id) {
+          highlightZone(targetWater, 'active', true);
+          speakCurrentContext();
+        } else if (targetWater) {
+          playSound('tap');
+          highlightZone(water, 'active', false);
+          document.getElementById('feedbackIcon').textContent = "✏️";
+          document.getElementById('feedbackText').innerHTML = `Dat is nummer <strong>${water.roman}</strong>. Spel nu eerst het gevraagde water bij nummer <strong>${targetWater.roman}</strong>!`;
+        }
+      }
+    }
+
+    /* ==========================================================================
+       10. CONFETTI & OVERWINNINGSSCHERM
+       ========================================================================== */
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      canvas.classList.remove('hidden');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+
+      const particles = [];
+      const colors = ['#38bdf8', '#f39c12', '#2ecc71', '#ec4899', '#a855f7', '#fb923c'];
+
+      for (let i = 0; i < 75; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.7) * 16,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 12,
+          opacity: 1
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.4;
+          p.rotation += p.rotationSpeed;
+          p.opacity -= 0.015;
+
+          if (p.opacity > 0) {
+            alive = true;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+          }
+        });
+
+        frame++;
+        if (alive && frame < 120) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.classList.add('hidden');
+        }
+      }
+      animate();
+    }
+
+    function showVictoryScreen() {
+      playSound('win');
+      triggerConfetti();
+
+      const modal = document.getElementById('victoryModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      document.getElementById('victoryStars').textContent = `⭐ ${scoreStars}`;
+      const accuracy = totalQuestionsAnswered > 0 
+        ? Math.round((totalCorrectAnswers / totalQuestionsAnswered) * 100) 
+        : 100;
+      document.getElementById('victoryAccuracy').textContent = `${accuracy}%`;
+
+      speakDutch("Gefeliciteerd! Je hebt alle zeventien wateren van Nederland voltooid!");
+    }
+
+    function closeVictoryModal() {
+      document.getElementById('victoryModal').classList.add('hidden');
+      document.getElementById('victoryModal').classList.remove('flex');
+      setMode('explore');
+    }
+
+    /* ==========================================================================
+       11. APPLICATIE STARTEN
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      initD3Map();
+      setMode('explore');
+      updateStatsDisplay();
+    });
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('confettiCanvas');
+      if (canvas && !canvas.classList.contains('hidden')) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+  </script>
+</body>
+</html>
