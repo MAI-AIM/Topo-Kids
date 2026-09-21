@@ -792,8 +792,8 @@
     let quizQueue = [];
     let scoreStars = 0;
     let currentStreak = 0;
-    let totalQuestionsAnswered = 0;
     let totalCorrectAnswers = 0;
+    let totalMistakes = 0;
     
     // Onafhankelijke registratie per spelmodus
     let exploredSet = new Set();          // Voor Oefenen & Verkennen
@@ -1307,8 +1307,8 @@
       selectedWater = null;
       quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
       locateCompletedSet.clear();
-      totalQuestionsAnswered = 0;
       totalCorrectAnswers = 0;
+      totalMistakes = 0;
 
       d3.selectAll(".map-pin").classed("correct-flash answered-correct active-target wrong-shake", false);
       highlightZone(null);
@@ -1351,7 +1351,6 @@
 
       if (clickedWater.id === targetWater.id) {
         isProcessingAnswer = true;
-        totalQuestionsAnswered++;
         totalCorrectAnswers++;
         currentStreak++;
         scoreStars += 10;
@@ -1374,7 +1373,7 @@
         
         nextLocateQuestion();
       } else {
-        totalQuestionsAnswered++;
+        totalMistakes++;
         currentStreak = 0;
         playSound('wrong');
 
@@ -1401,8 +1400,8 @@
       selectedWater = null;
       quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
       spellCompletedSet.clear();
-      totalQuestionsAnswered = 0;
       totalCorrectAnswers = 0;
+      totalMistakes = 0;
 
       document.getElementById('badgeIcon').textContent = "✏️";
       document.getElementById('badgeTitle').textContent = "Spelling Kampioen";
@@ -1567,6 +1566,8 @@
 
         checkSpellingCompletion();
       } else {
+        totalMistakes++;
+        currentStreak = 0;
         playSound('wrong');
         const card = document.getElementById('cardInteractive');
         card.classList.remove('shake-animation');
@@ -1575,6 +1576,7 @@
 
         document.getElementById('feedbackIcon').textContent = "⚠️";
         document.getElementById('feedbackText').textContent = "Oeps! Die letter hoort hier niet. Probeer een andere!";
+        updateStatsDisplay();
       }
     }
 
@@ -1642,13 +1644,12 @@
       const cleanUser = text.replace(/[^a-z]/g, '');
       const cleanTarget = targetWater.name.toLowerCase().replace(/[^a-z]/g, '');
 
-      totalQuestionsAnswered++;
-
       if (cleanUser === cleanTarget) {
         spellingUserLetters = targetWater.name.split('');
         renderSpellingSlots();
         checkSpellingCompletion(true);
       } else {
+        totalMistakes++;
         currentStreak = 0;
         playSound('wrong');
 
@@ -1988,10 +1989,22 @@
       modal.classList.add('flex');
 
       document.getElementById('victoryStars').textContent = `⭐ ${scoreStars}`;
-      const accuracy = totalQuestionsAnswered > 0 
-        ? Math.round((totalCorrectAnswers / totalQuestionsAnswered) * 100) 
+      const totalAttempts = totalCorrectAnswers + totalMistakes;
+      const accuracy = totalAttempts > 0 
+        ? Math.min(100, Math.max(0, Math.round((totalCorrectAnswers / totalAttempts) * 100))) 
         : 100;
       document.getElementById('victoryAccuracy').textContent = `${accuracy}%`;
+
+      const subtitleEl = document.getElementById('victorySubtitle');
+      if (subtitleEl) {
+        if (accuracy === 100) {
+          subtitleEl.textContent = "Foutloos! Je kent alle 17 wateren van Nederland perfect uit je hoofd! 🌟";
+        } else if (accuracy >= 80) {
+          subtitleEl.textContent = "Geweldig gedaan! Je kent bijna alle 17 wateren van Nederland uit je hoofd! 👏";
+        } else {
+          subtitleEl.textContent = "Goed geoefend! Blijf doorspelen om voor de 100% score te gaan! 💪";
+        }
+      }
 
       speakDutch("Gefeliciteerd! Je hebt alle zeventien wateren van Nederland voltooid!");
     }
