@@ -71,42 +71,47 @@
 
     /* Radar puls rond de actieve zone */
     @keyframes beaconPulse {
-      0% { r: 16; opacity: 0.95; stroke-width: 6; }
-      70% { r: 65; opacity: 0.15; stroke-width: 2; }
-      100% { r: 75; opacity: 0; stroke-width: 0; }
+      0% { transform: scale(0.25); opacity: 0.95; }
+      70% { transform: scale(1.0); opacity: 0.2; }
+      100% { transform: scale(1.3); opacity: 0; }
     }
 
     .radar-beacon {
       fill: none;
       stroke: #f39c12;
+      stroke-width: 4px;
+      transform-origin: 0 0;
       animation: beaconPulse 1.5s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
     }
 
     /* Bouncend pijl-icoon naar de juiste locatie */
     @keyframes jumpArrow {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
+      50% { transform: translateY(-10px); }
     }
 
     .jumping-arrow {
       animation: jumpArrow 0.85s ease-in-out infinite;
-      transform-origin: center bottom;
+      transform-origin: 0 0;
       pointer-events: none;
     }
 
     /* Pin badge animaties conform het lesblad (TopTopo glowing water pins) */
     .map-pin {
       cursor: pointer;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
-      transform-origin: center center;
     }
 
-    .map-pin:hover {
+    .pin-inner {
+      transform-origin: 0 0;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+    }
+
+    .map-pin:hover .pin-inner {
       transform: scale(1.22);
       filter: drop-shadow(0 0 10px #38bdf8);
     }
 
-    .map-pin.active-target {
+    .map-pin.active-target .pin-inner {
       transform: scale(1.35);
       filter: drop-shadow(0 0 14px #f39c12) drop-shadow(0 0 24px #f1c40f);
     }
@@ -118,7 +123,7 @@
       100% { transform: scale(1.15); filter: drop-shadow(0 0 12px #10b981); }
     }
 
-    .map-pin.correct-flash {
+    .map-pin.correct-flash .pin-inner {
       animation: pinCorrectFlash 0.55s ease-out forwards;
     }
 
@@ -138,12 +143,12 @@
 
     /* Schudden van de pin bij een fout antwoord */
     @keyframes pinShake {
-      0%, 100% { transform: scale(1) translateX(0); }
-      20%, 60% { transform: scale(1.22) translateX(-7px); }
-      40%, 80% { transform: scale(1.22) translateX(7px); }
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
     }
 
-    .map-pin.wrong-shake {
+    .map-pin.wrong-shake .pin-inner {
       animation: pinShake 0.45s ease-in-out;
       filter: drop-shadow(0 0 18px #ef4444) !important;
     }
@@ -952,7 +957,7 @@
         const coords = item.path.map(d3Projection);
         const curveGenerator = d3.line().curve(d3.curveCatmullRom);
 
-        riversLayer.append("path")
+        const riverPath = riversLayer.append("path")
           .attr("id", `path-water-${item.id}`)
           .attr("d", curveGenerator(coords))
           .attr("fill", "none")
@@ -969,6 +974,16 @@
           .attr("stroke", "transparent")
           .attr("stroke-width", Math.max(32, item.width + 22))
           .attr("class", "cursor-pointer")
+          .on("pointerenter", () => {
+            if (!riverPath.classed("highlight-flowing-river")) {
+              riverPath.attr("stroke", "#7dd3fc").attr("stroke-width", item.width + 2);
+            }
+          })
+          .on("pointerleave", () => {
+            if (!riverPath.classed("highlight-flowing-river")) {
+              riverPath.attr("stroke", "#38bdf8").attr("stroke-width", item.width);
+            }
+          })
           .on("click", (e) => handleAreaClick(item.id, e));
       });
 
@@ -980,14 +995,32 @@
 
       zeearmen.forEach(item => {
         const coords = item.path.map(d3Projection);
-        riversLayer.append("path")
+        const seaPath = riversLayer.append("path")
           .attr("id", `path-water-${item.id}`)
           .attr("d", d3.line().curve(d3.curveBasis)(coords))
           .attr("fill", "none")
           .attr("stroke", "#38bdf8")
           .attr("stroke-width", item.width)
           .attr("stroke-linecap", "round")
-          .attr("class", "cursor-pointer transition-all")
+          .attr("class", "cursor-pointer transition-all");
+
+        // Brede interactieve trefzone
+        riversLayer.append("path")
+          .attr("d", d3.line().curve(d3.curveBasis)(coords))
+          .attr("fill", "none")
+          .attr("stroke", "transparent")
+          .attr("stroke-width", Math.max(32, item.width + 22))
+          .attr("class", "cursor-pointer")
+          .on("pointerenter", () => {
+            if (!seaPath.classed("highlight-flowing-river")) {
+              seaPath.attr("stroke", "#7dd3fc").attr("stroke-width", item.width + 2);
+            }
+          })
+          .on("pointerleave", () => {
+            if (!seaPath.classed("highlight-flowing-river")) {
+              seaPath.attr("stroke", "#38bdf8").attr("stroke-width", item.width);
+            }
+          })
           .on("click", (e) => handleAreaClick(item.id, e));
       });
 
@@ -1021,14 +1054,18 @@
           onSelectWater(d);
         });
 
-      // Touchzone
-      pinGroups.append("circle")
-        .attr("r", 34)
+      // Geanimeerde container gecentreerd op lokaal punt (0, 0)
+      const pinInner = pinGroups.append("g")
+        .attr("class", "pin-inner");
+
+      // Touchzone voor kinderhanden
+      pinInner.append("circle")
+        .attr("r", 32)
         .attr("fill", "transparent")
         .attr("class", "cursor-pointer");
 
-      // Cyaan/waterblauwe ronde waterbadge
-      pinGroups.append("circle")
+      // Cyaan/waterblauwe ronde waterbadge conform de TopTopo leskaart
+      pinInner.append("circle")
         .attr("class", "pin-circle shadow-lg")
         .attr("r", 15)
         .attr("fill", "#0284c7")
@@ -1036,7 +1073,7 @@
         .attr("stroke-width", 2.5);
 
       // Golflijntjes in de badge
-      pinGroups.append("path")
+      pinInner.append("path")
         .attr("d", "M -7 -4 Q -3.5 -6 0 -4 T 7 -4 M -7 0 Q -3.5 -2 0 0 T 7 0 M -7 4 Q -3.5 2 0 4 T 7 4")
         .attr("fill", "none")
         .attr("stroke", "#ffffff")
@@ -1044,7 +1081,7 @@
         .attr("stroke-linecap", "round");
 
       // Romeins cijfer tekstje boven de waterbadge
-      const label = pinGroups.append("g")
+      const label = pinInner.append("g")
         .attr("transform", "translate(0, -22)");
 
       label.append("rect")
@@ -1125,9 +1162,11 @@
       const py = water.y;
 
       // 1. Pulserende radar om de zone
-      layer.append("circle")
-        .attr("cx", px)
-        .attr("cy", py)
+      const beaconGroup = layer.append("g")
+        .attr("transform", `translate(${px}, ${py})`);
+
+      beaconGroup.append("circle")
+        .attr("r", 48)
         .attr("class", "radar-beacon")
         .attr("stroke", status === 'correct' ? '#2ecc71' : '#f39c12');
 
@@ -1151,8 +1190,10 @@
 
       // 4. Bouncende pijl
       if (showArrow) {
-        const arrowGroup = layer.append("g")
-          .attr("transform", `translate(${px}, ${py - 32})`)
+        const arrowWrapper = layer.append("g")
+          .attr("transform", `translate(${px}, ${py - 32})`);
+
+        const arrowGroup = arrowWrapper.append("g")
           .attr("class", "jumping-arrow");
 
         arrowGroup.append("rect")
