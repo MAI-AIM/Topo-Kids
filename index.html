@@ -207,16 +207,29 @@
       
       <!-- Titel & Logo -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-md shadow-sky-300 text-xl font-black">
+        <div id="headerLogoIcon" class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-md shadow-sky-300 text-xl font-black">
           🌊
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-xl font-black text-sky-950 tracking-tight leading-none">Wateren van Nederland</h1>
-            <span class="text-[11px] font-extrabold bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-full">Topografie</span>
+            <h1 id="headerMainTitle" class="text-base sm:text-xl font-black text-sky-950 tracking-tight leading-none">Wateren van Nederland</h1>
+            <span id="headerBadgeText" class="text-[11px] font-extrabold bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-full">Topografie</span>
           </div>
-          <p class="text-xs text-sky-700 font-bold hidden sm:block">17 wateren oefenen en spellen (I t/m XVII)</p>
+          <p id="headerSubtitle" class="text-xs text-sky-700 font-bold hidden sm:block">17 wateren oefenen en spellen (I t/m XVII)</p>
         </div>
+      </div>
+
+      <!-- Lesonderwerp / Module Wisselaar -->
+      <div class="flex items-center bg-amber-50/90 p-1 rounded-2xl border-2 border-amber-200 shadow-sm gap-1">
+        <button id="btnModuleWateren" onclick="switchModule('wateren')" class="px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-sky-950 shadow-sm">
+          <span>🌊</span> <span class="hidden xs:inline">Wateren</span> <span class="text-[10px] opacity-80">(17)</span>
+        </button>
+        <button id="btnModuleGroningen" onclick="switchModule('groningen')" class="px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-amber-900 hover:text-amber-950">
+          <span>🌾</span> <span class="hidden xs:inline">Groningen</span> <span class="text-[10px] opacity-80">(22)</span>
+        </button>
+        <button onclick="openModuleModal()" class="px-2 sm:px-2.5 py-1.5 rounded-xl font-black text-xs transition-all text-amber-900 hover:bg-amber-100 flex items-center gap-1" title="Kies een ander onderwerp">
+          <span>📚</span> <span class="hidden md:inline">Thema's</span> <span>▾</span>
+        </button>
       </div>
 
       <!-- Spelmodi Wisselaar (Oefenen, Aanwijzen, Spellen) -->
@@ -271,14 +284,25 @@
 
   <main class="flex-1 relative flex flex-col lg:flex-row overflow-hidden max-w-7xl mx-auto w-full p-2 sm:p-4 gap-3 sm:gap-4">
     
-    <!-- Linkerhelft: Natuurgetrouwe TopTopo Kaart van Nederland -->
+    <!-- Linkerhelft: Natuurgetrouwe TopTopo Kaart -->
     <section class="flex-1 bg-sky-900/40 rounded-3xl border-2 border-sky-300/40 shadow-2xl relative overflow-hidden flex flex-col min-h-[420px] lg:min-h-0 backdrop-blur-sm">
       
       <!-- Header Badge op de kaart -->
       <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-md border border-sky-200 pointer-events-none z-10 flex items-center gap-2">
         <span class="font-black text-xs text-sky-950">🇳🇱 Nederland</span>
         <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-        <span class="text-[11px] font-bold text-sky-700">Wateren (I-XVII)</span>
+        <span id="headerMapBadgeText" class="text-[11px] font-bold text-sky-700">Wateren (I-XVII)</span>
+      </div>
+
+      <!-- Inset Map voor Groningen (TopTopo stijl: Nederland met Groningen oranje gemarkeerd) -->
+      <div id="groningenInsetMap" class="absolute top-3 right-14 sm:right-16 z-10 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-md border-2 border-amber-300 pointer-events-none hidden flex-col items-center">
+        <span class="text-[9px] font-black text-amber-900 uppercase tracking-wider mb-0.5">Locatie in NL</span>
+        <svg class="w-14 h-16 sm:w-16 sm:h-20" viewBox="0 0 100 120">
+          <!-- Nederland basiscontour -->
+          <path d="M 30,15 L 45,10 L 65,15 L 85,15 L 88,30 L 80,45 L 88,60 L 75,80 L 80,105 L 68,115 L 62,100 L 50,85 L 30,85 L 20,80 L 30,75 L 32,55 L 22,50 L 30,40 L 40,35 L 35,25 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
+          <!-- Groningen provincie in oranje gemarkeerd -->
+          <path d="M 65,15 L 85,15 L 88,30 L 75,35 L 65,30 Z" fill="#f97316" stroke="#ea580c" stroke-width="2" />
+        </svg>
       </div>
 
       <!-- Zoom Knoppen rechtsboven op de kaart -->
@@ -302,7 +326,7 @@
       <!-- Laad-indicator tijdens het ophalen van de officiële GeoJSON -->
       <div id="mapLoadingSpinner" class="absolute inset-0 bg-sky-900/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-white gap-3 pointer-events-none transition-opacity duration-300">
         <div class="w-10 h-10 border-4 border-white/30 border-t-amber-400 rounded-full animate-spin"></div>
-        <span class="text-xs font-black tracking-wide text-sky-100">Officiële kaart van Nederland laden...</span>
+        <span class="text-xs font-black tracking-wide text-sky-100">Officiële topografie kaart laden...</span>
       </div>
 
       <!-- SVG Element met D3 projectie -->
@@ -338,20 +362,26 @@
           <!-- Provincies met natuurgetrouwe contouren -->
           <g id="layerProvinces" filter="url(#landShadow)"></g>
 
+          <!-- Groningen specifieke gebieden (Hoge land & Westerwolde) -->
+          <g id="layerGroningenRegions"></g>
+
+          <!-- Wegen & Transit netwerk -->
+          <g id="layerTransit"></g>
+
           <!-- Rivieren, Kanalen en Dijken -->
           <g id="layerRivers"></g>
 
           <!-- Zone highlights (pulserende radar & bouncende pijl) -->
           <g id="layerHighlights" pointer-events="none"></g>
 
-          <!-- Pins (I t/m XVII) met golventeken en Romeinse cijfers -->
+          <!-- Kaart Pins (Wateren of Groningen locaties) -->
           <g id="layerPins"></g>
         </g>
       </svg>
 
       <!-- Legenda onderaan de kaart -->
-      <div class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-sky-200 shadow text-[10px] font-bold text-sky-900 pointer-events-none flex items-center gap-2.5">
-        <div class="flex items-center gap-1.5">
+      <div id="mapLegendContainer" class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-sky-200 shadow text-[10px] font-bold text-sky-900 pointer-events-none flex items-center gap-2.5">
+        <div id="mapLegendContent" class="flex items-center gap-2">
           <div class="w-3 h-3 rounded-full bg-cyan-400 border border-white flex items-center justify-center text-[8px] text-white">≋</div>
           <span>Water (I-XVII)</span>
         </div>
@@ -458,14 +488,22 @@
 
       </div>
 
-      <!-- Wateren Lijst & Snelle Referentie -->
+      <!-- Wateren / Locaties Lijst & Snelle Referentie -->
       <div id="cardWaterList" class="bg-white/95 backdrop-blur-md rounded-3xl border-2 border-sky-200 shadow-md p-3 sm:p-4 flex-1 flex flex-col overflow-hidden min-h-[120px]">
         <div class="flex items-center justify-between pb-2 border-b border-sky-100">
           <span id="waterListTitle" class="text-xs font-black text-sky-950 uppercase tracking-wider">Overzicht (17 Wateren)</span>
           <span id="learnedCounter" class="text-xs font-extrabold text-sky-800 bg-sky-100 px-2 py-0.5 rounded-full">0/17 geoefend</span>
         </div>
+
+        <!-- Categorie Filter Tabs (alleen zichtbaar bij lessen met subcategorieën zoals Groningen) -->
+        <div id="listCategoryFilter" class="hidden flex-wrap gap-1 pt-2 pb-1">
+          <button onclick="setListCategoryFilter('all')" id="btnFilterCat-all" class="px-2 py-0.5 rounded-lg text-[11px] font-black bg-sky-500 text-white shadow-sm transition-all">Alles (22)</button>
+          <button onclick="setListCategoryFilter('stad')" id="btnFilterCat-stad" class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-sky-100 transition-all">🔴 Steden (14)</button>
+          <button onclick="setListCategoryFilter('gebied')" id="btnFilterCat-gebied" class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-sky-100 transition-all">🟩 Gebieden (4)</button>
+          <button onclick="setListCategoryFilter('water')" id="btnFilterCat-water" class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-sky-100 transition-all">🔵 Water (4)</button>
+        </div>
         
-        <!-- Lijst met 17 wateren -->
+        <!-- Lijst met items -->
         <div id="waterListScroll" class="overflow-y-auto flex-1 mt-2 pr-1 space-y-1">
           <!-- Dynamisch gegenereerd -->
         </div>
@@ -474,6 +512,78 @@
     </section>
 
   </main>
+
+  <!-- Lesonderwerp Kiezer Modal -->
+  <div id="moduleSelectModal" class="fixed inset-0 bg-sky-950/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl border-4 border-amber-300 shadow-2xl max-w-lg w-full p-6 sm:p-7 flex flex-col gap-4 relative animate-bounce-short">
+      
+      <!-- Sluitknop -->
+      <button onclick="closeModuleModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition-all active:scale-95" title="Sluiten">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-amber-100 border-2 border-amber-300 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+          📚
+        </div>
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-sky-950 leading-tight font-display">
+            Kies je Topografie Les
+          </h2>
+          <p class="text-xs text-slate-500 font-bold">
+            Selecteer een leskaart om te verkennen, aanwijzen of spellen!
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+        
+        <!-- Kaart 1: Wateren van Nederland -->
+        <div id="moduleCard-wateren" onclick="selectModuleFromModal('wateren')" class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-sky-50/50 border-sky-300 hover:border-sky-500 hover:shadow-md">
+          <div class="flex items-start justify-between">
+            <span class="text-3xl p-2 rounded-2xl bg-white border border-sky-200 shadow-sm">🌊</span>
+            <span id="moduleBadge-wateren" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-200">17 Wateren</span>
+          </div>
+          <div>
+            <h3 class="font-black text-sky-950 text-base group-hover:text-sky-700 transition-colors">Wateren van Nederland</h3>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">Alle 17 rivieren, kanalen, meren en zeeën (I t/m XVII).</p>
+          </div>
+          <button class="w-full py-2 rounded-xl text-xs font-black transition-all bg-sky-500 group-hover:bg-sky-400 text-white shadow-sm flex items-center justify-center gap-1">
+            <span>Start deze les</span> <span>➔</span>
+          </button>
+        </div>
+
+        <!-- Kaart 2: Provincie Groningen -->
+        <div id="moduleCard-groningen" onclick="selectModuleFromModal('groningen')" class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-amber-50/50 border-amber-300 hover:border-amber-500 hover:shadow-md">
+          <div class="absolute -right-6 top-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-7 py-0.5 rotate-45 shadow-sm uppercase tracking-wider">
+            Nieuw!
+          </div>
+          <div class="flex items-start justify-between">
+            <span class="text-3xl p-2 rounded-2xl bg-white border border-amber-200 shadow-sm">🌾</span>
+            <span id="moduleBadge-groningen" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">22 Locaties</span>
+          </div>
+          <div>
+            <h3 class="font-black text-sky-950 text-base group-hover:text-amber-800 transition-colors">Provincie Groningen</h3>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">14 steden, 4 gebieden en 4 wateren van Groningen.</p>
+          </div>
+          <button class="w-full py-2 rounded-xl text-xs font-black transition-all bg-amber-500 group-hover:bg-amber-400 text-white shadow-sm flex items-center justify-center gap-1">
+            <span>Start deze les</span> <span>➔</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Binnenkort meer opties -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
+        <span class="text-2xl">🗺️</span>
+        <div class="flex-1">
+          <h4 class="text-xs font-black text-slate-800">Binnenkort meer leskaarten!</h4>
+          <p class="text-[11px] text-slate-500 font-semibold">Friesland, Drenthe, Overijssel en meer provincies worden binnenkort toegevoegd.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Feest Modal bij winst -->
   <div id="victoryModal" class="fixed inset-0 bg-sky-950/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -515,27 +625,377 @@
 
   <script>
     /* ==========================================================================
-       1. DATASET: DE 17 WATEREN VAN NEDERLAND (EXACTE GEOGRAFISCHE COÖRDINATEN)
+       1. DATASETS VOOR TOPOGRAFIE LESSEN (WATEREN & GRONINGEN)
        ========================================================================== */
     const WATERS_DATA = [
-      { id: 1,  roman: "I",    name: "Schelde-Rijnkanaal",   type: "kanaal", lng: 4.24, lat: 51.48, article: "het", desc: "Verbindt de haven van Antwerpen met de Rijn via Noord-Brabant en Zeeland." },
-      { id: 2,  roman: "II",   name: "Maas",                 type: "rivier", lng: 5.92, lat: 51.18, article: "de",  desc: "Stroomt vanuit Frankrijk en België door heel Limburg en langs Noord-Brabant." },
-      { id: 3,  roman: "III",  name: "Amsterdam-Rijnkanaal", type: "kanaal", lng: 5.05, lat: 52.18, article: "het", desc: "Druk bevaren kanaal tussen Amsterdam en de grote rivieren bij Tiel." },
-      { id: 4,  roman: "IV",   name: "Waddenzee",            type: "zee",    lng: 5.45, lat: 53.35, article: "de",  desc: "Uniek getijdengebied tussen het vasteland en de Waddeneilanden." },
-      { id: 5,  roman: "V",    name: "Westerschelde",        type: "zee",    lng: 3.70, lat: 51.38, article: "de",  desc: "Brede zeearm in Zeeland die toegang geeft tot de haven van Antwerpen." },
-      { id: 6,  roman: "VI",   name: "Lek",                  type: "rivier", lng: 4.88, lat: 51.93, article: "de",  desc: "Voortzetting van de Nederrijn vanaf Wijk bij Duurstede naar het westen." },
-      { id: 7,  roman: "VII",  name: "Oosterschelde",        type: "zee",    lng: 3.90, lat: 51.60, article: "de",  desc: "Grootste nationaal park van Nederland, afgesloten door de stormvloedkering." },
-      { id: 8,  roman: "VIII", name: "IJssel",               type: "rivier", lng: 6.12, lat: 52.24, article: "de",  desc: "Rivier die bij Arnhem aftakt van de Rijn en noordwaarts naar het IJsselmeer stroomt." },
-      { id: 9,  roman: "IX",   name: "Noordzeekanaal",       type: "kanaal", lng: 4.68, lat: 52.44, article: "het", desc: "Verbindt de haven van Amsterdam rechtstreeks met de Noordzee bij IJmuiden." },
-      { id: 10, roman: "X",    name: "Waal",                 type: "rivier", lng: 5.40, lat: 51.87, article: "de",  desc: "De breedste en drukst bevaren arm van de Rijn in Nederland." },
-      { id: 11, roman: "XI",   name: "Noordzee",             type: "zee",    lng: 3.72, lat: 52.40, article: "de",  desc: "De open zee ten noorden en westen van Nederland met brede zandstranden." },
-      { id: 12, roman: "XII",  name: "Nieuwe Waterweg",      type: "kanaal", lng: 4.20, lat: 51.92, article: "de",  desc: "Belangrijke waterweg die Rotterdam en Europoort verbindt met de Noordzee." },
-      { id: 13, roman: "XIII", name: "Veluwemeer",           type: "meer",   lng: 5.68, lat: 52.42, article: "het", desc: "Ondiep randmeer tussen Gelderland en Flevoland, populair bij watersporters." },
-      { id: 14, roman: "XIV",  name: "Twentekanaal",         type: "kanaal", lng: 6.45, lat: 52.20, article: "het", desc: "Kanaal in Overijssel en Gelderland dat Enschede en Hengelo verbindt met de IJssel." },
-      { id: 15, roman: "XV",   name: "IJsselmeer",           type: "meer",   lng: 5.30, lat: 52.75, article: "het", desc: "Het grootste zoetwatermeer van Nederland, ontstaan na de bouw van de Afsluitdijk." },
-      { id: 16, roman: "XVI",  name: "Nederrijn",            type: "rivier", lng: 5.75, lat: 51.96, article: "de",  desc: "Riviertak van de Rijn die langs Arnhem stroomt richting Wijk bij Duurstede." },
-      { id: 17, roman: "XVII", name: "Rijn",                 type: "rivier", lng: 6.08, lat: 51.85, article: "de",  desc: "Komt bij Spijk/Lobith Nederland binnen en splitst zich in Waal en Nederrijn." }
+      { id: 1,  code: "I",    roman: "I",    category: "water", categoryLabel: "Water", name: "Schelde-Rijnkanaal",   spellTarget: "Schelde-Rijnkanaal",   type: "kanaal", lng: 4.24, lat: 51.48, article: "het", desc: "Verbindt de haven van Antwerpen met de Rijn via Noord-Brabant en Zeeland." },
+      { id: 2,  code: "II",   roman: "II",   category: "water", categoryLabel: "Water", name: "Maas",                 spellTarget: "Maas",                 type: "rivier", lng: 5.92, lat: 51.18, article: "de",  desc: "Stroomt vanuit Frankrijk en België door heel Limburg en langs Noord-Brabant." },
+      { id: 3,  code: "III",  roman: "III",  category: "water", categoryLabel: "Water", name: "Amsterdam-Rijnkanaal", spellTarget: "Amsterdam-Rijnkanaal", type: "kanaal", lng: 5.05, lat: 52.18, article: "het", desc: "Druk bevaren kanaal tussen Amsterdam en de grote rivieren bij Tiel." },
+      { id: 4,  code: "IV",   roman: "IV",   category: "water", categoryLabel: "Water", name: "Waddenzee",            spellTarget: "Waddenzee",            type: "zee",    lng: 5.45, lat: 53.35, article: "de",  desc: "Uniek getijdengebied tussen het vasteland en de Waddeneilanden." },
+      { id: 5,  code: "V",    roman: "V",    category: "water", categoryLabel: "Water", name: "Westerschelde",        spellTarget: "Westerschelde",        type: "zee",    lng: 3.70, lat: 51.38, article: "de",  desc: "Brede zeearm in Zeeland die toegang geeft tot de haven van Antwerpen." },
+      { id: 6,  code: "VI",   roman: "VI",   category: "water", categoryLabel: "Water", name: "Lek",                  spellTarget: "Lek",                  type: "rivier", lng: 4.88, lat: 51.93, article: "de",  desc: "Voortzetting van de Nederrijn vanaf Wijk bij Duurstede naar het westen." },
+      { id: 7,  code: "VII",  roman: "VII",  category: "water", categoryLabel: "Water", name: "Oosterschelde",        spellTarget: "Oosterschelde",        type: "zee",    lng: 3.90, lat: 51.60, article: "de",  desc: "Grootste nationaal park van Nederland, afgesloten door de stormvloedkering." },
+      { id: 8,  code: "VIII", roman: "VIII", category: "water", categoryLabel: "Water", name: "IJssel",               spellTarget: "IJssel",               type: "rivier", lng: 6.12, lat: 52.24, article: "de",  desc: "Rivier die bij Arnhem aftakt van de Rijn en noordwaarts naar het IJsselmeer stroomt." },
+      { id: 9,  code: "IX",   roman: "IX",   category: "water", categoryLabel: "Water", name: "Noordzeekanaal",       spellTarget: "Noordzeekanaal",       type: "kanaal", lng: 4.68, lat: 52.44, article: "het", desc: "Verbindt de haven van Amsterdam rechtstreeks met de Noordzee bij IJmuiden." },
+      { id: 10, code: "X",    roman: "X",    category: "water", categoryLabel: "Water", name: "Waal",                 spellTarget: "Waal",                 type: "rivier", lng: 5.40, lat: 51.87, article: "de",  desc: "De breedste en drukst bevaren arm van de Rijn in Nederland." },
+      { id: 11, code: "XI",   roman: "XI",   category: "water", categoryLabel: "Water", name: "Noordzee",             spellTarget: "Noordzee",             type: "zee",    lng: 3.72, lat: 52.40, article: "de",  desc: "De open zee ten noorden en westen van Nederland met brede zandstranden." },
+      { id: 12, code: "XII",  roman: "XII",  category: "water", categoryLabel: "Water", name: "Nieuwe Waterweg",      spellTarget: "Nieuwe Waterweg",      type: "kanaal", lng: 4.20, lat: 51.92, article: "de",  desc: "Belangrijke waterweg die Rotterdam en Europoort verbindt met de Noordzee." },
+      { id: 13, code: "XIII", roman: "XIII", category: "water", categoryLabel: "Water", name: "Veluwemeer",           spellTarget: "Veluwemeer",           type: "meer",   lng: 5.68, lat: 52.42, article: "het", desc: "Ondiep randmeer tussen Gelderland en Flevoland, populair bij watersporters." },
+      { id: 14, code: "XIV",  roman: "XIV",  category: "water", categoryLabel: "Water", name: "Twentekanaal",         spellTarget: "Twentekanaal",         type: "kanaal", lng: 6.45, lat: 52.20, article: "het", desc: "Kanaal in Overijssel en Gelderland dat Enschede en Hengelo verbindt met de IJssel." },
+      { id: 15, code: "XV",   roman: "XV",   category: "water", categoryLabel: "Water", name: "IJsselmeer",           spellTarget: "IJsselmeer",           type: "meer",   lng: 5.30, lat: 52.75, article: "het", desc: "Het grootste zoetwatermeer van Nederland, ontstaan na de bouw van de Afsluitdijk." },
+      { id: 16, code: "XVI",  roman: "XVI",  category: "water", categoryLabel: "Water", name: "Nederrijn",            spellTarget: "Nederrijn",            type: "rivier", lng: 5.75, lat: 51.96, article: "de",  desc: "Riviertak van de Rijn die langs Arnhem stroomt richting Wijk bij Duurstede." },
+      { id: 17, code: "XVII", roman: "XVII", category: "water", categoryLabel: "Water", name: "Rijn",                 spellTarget: "Rijn",                 type: "rivier", lng: 6.08, lat: 51.85, article: "de",  desc: "Komt bij Spijk/Lobith Nederland binnen en splitst zich in Waal en Nederrijn." }
     ];
+
+    /* Nieuwe Les: TopTopo Groningen (14 steden, 4 gebieden, 4 wateren = 22 items) */
+    const GRONINGEN_DATA = [
+      // 1 Hoofdstad
+      { 
+        id: 'gro-1', 
+        code: '1', 
+        category: 'hoofdstad', 
+        categoryLabel: 'Hoofdstad', 
+        name: 'Groningen (stad)', 
+        spellTarget: 'Groningen', 
+        type: 'hoofdstad', 
+        lng: 6.5665, 
+        lat: 53.2194, 
+        article: 'de', 
+        desc: 'De bruisende hoofdstad van de provincie Groningen, bekend om de Martinitoren en het Groninger Museum.',
+        pronounce: 'Groningen, de hoofdstad van de provincie Groningen.'
+      },
+      // 2-14 Steden & Dorpen
+      { 
+        id: 'gro-2', 
+        code: '2', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Stadskanaal', 
+        spellTarget: 'Stadskanaal', 
+        type: 'stad', 
+        lng: 6.9536, 
+        lat: 52.9906, 
+        article: 'het', 
+        desc: 'Veenkoloniale plaats in het zuidoosten van Groningen, ontstaan langs het gelijknamige kanaal.',
+        pronounce: 'Stadskanaal, plaats in het zuidoosten van Groningen.'
+      },
+      { 
+        id: 'gro-3', 
+        code: '3', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Winschoten', 
+        spellTarget: 'Winschoten', 
+        type: 'stad', 
+        lng: 7.0347, 
+        lat: 53.1436, 
+        article: 'het', 
+        desc: 'Bekend als de Molenstad en het gezellige winkelhart van de regio Oost-Groningen.',
+        pronounce: 'Winschoten, molenstad in Oost-Groningen.'
+      },
+      { 
+        id: 'gro-4', 
+        code: '4', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Slochteren', 
+        spellTarget: 'Slochteren', 
+        type: 'stad', 
+        lng: 6.8042, 
+        lat: 53.2172, 
+        article: 'het', 
+        desc: 'Dorp ten oosten van Groningen, beroemd om de historische Fraeylemaborg en het grote aardgasveld.',
+        pronounce: 'Slochteren, bekend om de Fraeylemaborg en het aardgas.'
+      },
+      { 
+        id: 'gro-5', 
+        code: '5', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Pieterburen', 
+        spellTarget: 'Pieterburen', 
+        type: 'stad', 
+        lng: 6.4525, 
+        lat: 53.4000, 
+        article: 'het', 
+        desc: 'Noordelijk dorp, wereldberoemd om het Zeehondencentrum en als startpunt van wadlooptochten.',
+        pronounce: 'Pieterburen, bekend om het zeehondencentrum.'
+      },
+      { 
+        id: 'gro-6', 
+        code: '6', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Nieuweschans', 
+        spellTarget: 'Nieuweschans', 
+        type: 'stad', 
+        lng: 7.2069, 
+        lat: 53.1814, 
+        article: 'het', 
+        desc: 'De meest oostelijke grensplaats van Nederland, bekend als historische vesting en kuuroord.',
+        pronounce: 'Nieuweschans, vestingstadje aan de Duitse grens.'
+      },
+      { 
+        id: 'gro-7', 
+        code: '7', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Roodeschool', 
+        spellTarget: 'Roodeschool', 
+        type: 'stad', 
+        lng: 6.7611, 
+        lat: 53.4222, 
+        article: 'het', 
+        desc: 'Noordelijk dorp in Groningen, bekend om het noordelijkste treinstation van het Nederlandse vasteland.',
+        pronounce: 'Roodeschool, noordelijk dorp in Groningen.'
+      },
+      { 
+        id: 'gro-8', 
+        code: '8', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Ter Apel', 
+        spellTarget: 'Ter Apel', 
+        type: 'stad', 
+        lng: 7.0628, 
+        lat: 52.8767, 
+        article: 'het', 
+        desc: 'Plaats in het uiterste zuidoosten van Groningen, beroemd om het middeleeuwse kruisherenklooster.',
+        pronounce: 'Ter Apel, met het historische klooster in Westerwolde.'
+      },
+      { 
+        id: 'gro-9', 
+        code: '9', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Haren', 
+        spellTarget: 'Haren', 
+        type: 'stad', 
+        lng: 6.6083, 
+        lat: 53.1750, 
+        article: 'het', 
+        desc: 'Groene plaats direct ten zuiden van de stad Groningen, bekend om de Hortus botanicus.',
+        pronounce: 'Haren, groene plaats direct ten zuiden van Groningen.'
+      },
+      { 
+        id: 'gro-10', 
+        code: '10', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Delfzijl', 
+        spellTarget: 'Delfzijl', 
+        type: 'stad', 
+        lng: 6.9167, 
+        lat: 53.3333, 
+        article: 'het', 
+        desc: 'Belangrijke havenstad aan de Eemsmonding en de Dollard met zware industrie en scheepvaart.',
+        pronounce: 'Delfzijl, havenstad aan de Eems en de Dollard.'
+      },
+      { 
+        id: 'gro-11', 
+        code: '11', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Veendam', 
+        spellTarget: 'Veendam', 
+        type: 'stad', 
+        lng: 6.9236, 
+        lat: 53.1067, 
+        article: 'het', 
+        desc: 'De Parkstad van Groningen, een levendige veenkoloniale plaats met veel groen en water.',
+        pronounce: 'Veendam, de groene parkstad van Groningen.'
+      },
+      { 
+        id: 'gro-12', 
+        code: '12', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Hoogezand-Sappemeer', 
+        spellTarget: 'Hoogezand-Sappemeer', 
+        type: 'stad', 
+        lng: 6.7583, 
+        lat: 53.1611, 
+        article: 'het', 
+        desc: 'Groot tweelingdorp ten oosten van Groningen langs het Winschoterdiep met veel scheepsbouw.',
+        pronounce: 'Hoogezand-Sappemeer, tweelingdorp langs het Winschoterdiep.'
+      },
+      { 
+        id: 'gro-13', 
+        code: '13', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Appingedam', 
+        spellTarget: 'Appingedam', 
+        type: 'stad', 
+        lng: 6.8569, 
+        lat: 53.3217, 
+        article: 'het', 
+        desc: 'Historisch stadje met stadsrechten sinds 1327, beroemd om de hangende keukens boven het Damsterdiep.',
+        pronounce: 'Appingedam, historisch stadje met hangende keukens.'
+      },
+      { 
+        id: 'gro-14', 
+        code: '14', 
+        category: 'stad', 
+        categoryLabel: 'Stad', 
+        name: 'Lauwersoog', 
+        spellTarget: 'Lauwersoog', 
+        type: 'stad', 
+        lng: 6.1950, 
+        lat: 53.4072, 
+        article: 'het', 
+        desc: 'Vissershaven op de grens van Groningen en Friesland, vertrekhaven van de veerboot naar Schiermonnikoog.',
+        pronounce: 'Lauwersoog, haven aan het Lauwersmeer.'
+      },
+
+      // a-d Gebieden
+      { 
+        id: 'gro-a', 
+        code: 'a', 
+        category: 'gebied', 
+        categoryLabel: 'Gebied', 
+        name: 'Rottumerplaat', 
+        spellTarget: 'Rottumerplaat', 
+        type: 'gebied', 
+        lng: 6.4800, 
+        lat: 53.5420, 
+        article: 'het', 
+        desc: 'Onbewoond waddeneiland ten noorden van Groningen, een beschermd rustgebied voor vogels en zeehonden.',
+        pronounce: 'Rottumerplaat, onbewoond waddeneiland ten noorden van Groningen.'
+      },
+      { 
+        id: 'gro-b', 
+        code: 'b', 
+        category: 'gebied', 
+        categoryLabel: 'Gebied', 
+        name: 'Rottumeroog', 
+        spellTarget: 'Rottumeroog', 
+        type: 'gebied', 
+        lng: 6.5820, 
+        lat: 53.5410, 
+        article: 'het', 
+        desc: 'Het meest oostelijke onbewoonde Nederlandse waddeneiland in de Waddenzee.',
+        pronounce: 'Rottumeroog, onbewoond waddeneiland in de Waddenzee.'
+      },
+      { 
+        id: 'gro-c', 
+        code: 'c', 
+        category: 'gebied', 
+        categoryLabel: 'Gebied', 
+        name: 'Hoge land', 
+        spellTarget: 'Hoge land', 
+        type: 'gebied', 
+        lng: 6.5400, 
+        lat: 53.3650, 
+        article: 'het', 
+        desc: 'Cultuurhistorisch gebied in Noord-Groningen met wierden (terpen), middeleeuwse kerken en weidse uitzichten.',
+        pronounce: 'Het Hoge land, streek in Noord-Groningen.'
+      },
+      { 
+        id: 'gro-d', 
+        code: 'd', 
+        category: 'gebied', 
+        categoryLabel: 'Gebied', 
+        name: 'Westerwolde', 
+        spellTarget: 'Westerwolde', 
+        type: 'gebied', 
+        lng: 7.1200, 
+        lat: 53.0500, 
+        article: 'het', 
+        desc: 'Groene streek in Oost-Groningen met beekdalen, bossen en kronkelende riviertjes.',
+        pronounce: 'Westerwolde, mooie groene streek in Oost-Groningen.'
+      },
+
+      // I-IV Wateren
+      { 
+        id: 'gro-I', 
+        code: 'I', 
+        category: 'water', 
+        categoryLabel: 'Water', 
+        name: 'Dollard', 
+        spellTarget: 'Dollard', 
+        type: 'water', 
+        lng: 7.1700, 
+        lat: 53.3000, 
+        article: 'de', 
+        desc: 'Grote brakwater zeearm van de Waddenzee op de grens van Nederland en Duitsland.',
+        pronounce: 'De Dollard, zeearm op de grens met Duitsland.'
+      },
+      { 
+        id: 'gro-II', 
+        code: 'II', 
+        category: 'water', 
+        categoryLabel: 'Water', 
+        name: 'Eems', 
+        spellTarget: 'Eems', 
+        type: 'water', 
+        lng: 6.9500, 
+        lat: 53.4600, 
+        article: 'de', 
+        desc: 'Brede rivier en zeearm die vanuit Duitsland langs de Groningse kust in de Noordzee stroomt.',
+        pronounce: 'De Eems, brede rivier en zeearm.'
+      },
+      { 
+        id: 'gro-III', 
+        code: 'III', 
+        category: 'water', 
+        categoryLabel: 'Water', 
+        name: 'Eemskanaal', 
+        spellTarget: 'Eemskanaal', 
+        type: 'water', 
+        lng: 6.7400, 
+        lat: 53.2700, 
+        article: 'het', 
+        desc: 'Belangrijk scheepvaartkanaal gegraven tussen 1866 en 1876 dat Groningen verbindt met Delfzijl.',
+        pronounce: 'Het Eemskanaal, tussen de stad Groningen en Delfzijl.'
+      },
+      { 
+        id: 'gro-IV', 
+        code: 'IV', 
+        category: 'water', 
+        categoryLabel: 'Water', 
+        name: 'Van Starkenborghkanaal', 
+        spellTarget: 'Van Starkenborghkanaal', 
+        type: 'water', 
+        lng: 6.3800, 
+        lat: 53.2450, 
+        article: 'het', 
+        desc: 'Druk bevaren vaarweg die loopt vanaf de Friese grens via Zuidhorn naar de stad Groningen.',
+        pronounce: 'Het Van Starkenborghkanaal, van Friesland naar Groningen.'
+      }
+    ];
+
+    /* Moduleconfiguratie Registry */
+    const LESSON_MODULES = {
+      wateren: {
+        id: 'wateren',
+        name: 'Wateren van Nederland',
+        shortName: 'Wateren',
+        icon: '🌊',
+        badgeText: 'Topografie',
+        subtitle: '17 wateren oefenen en spellen (I t/m XVII)',
+        mapBadgeText: 'Wateren (I-XVII)',
+        unitName: 'wateren',
+        unitLabelSingular: 'water',
+        items: WATERS_DATA,
+        hasCategories: false,
+        victoryText: 'Je kent nu alle 17 wateren van Nederland uit je hoofd!'
+      },
+      groningen: {
+        id: 'groningen',
+        name: 'Provincie Groningen',
+        shortName: 'Groningen',
+        icon: '🌾',
+        badgeText: 'Topografie • Nieuw!',
+        subtitle: '22 locaties: 14 steden, 4 gebieden en 4 wateren',
+        mapBadgeText: 'Groningen (TopTopo)',
+        unitName: 'locaties',
+        unitLabelSingular: 'locatie',
+        items: GRONINGEN_DATA,
+        hasCategories: true,
+        victoryText: 'Je kent nu alle 22 steden, gebieden en wateren van Groningen uit je hoofd!'
+      }
+    };
 
     /* ==========================================================================
        2. HOOGWAARDIGE GEOMETRIE VAN WATERWEGEN EN FALLBACK PROVINCIES
@@ -567,6 +1027,28 @@
       westerschelde: [[3.48, 51.49], [3.70, 51.38], [4.02, 51.50], [4.21, 51.30], [3.98, 51.35], [3.71, 51.37], [3.37, 51.37], [3.48, 51.49]]
     };
 
+    /* Groningen Specifieke Geometrie (Kanalen, Zeearmen, Gebieden & Wegen) */
+    const GRONINGEN_GEOMETRIES = {
+      eemskanaal: [[6.5665, 53.2194], [6.6800, 53.2450], [6.7800, 53.2800], [6.8569, 53.3217], [6.9167, 53.3333]],
+      vanStarkenborghkanaal: [[6.1800, 53.2500], [6.3200, 53.2500], [6.4400, 53.2450], [6.5665, 53.2194]],
+      dollard: [[7.0800, 53.3300], [7.1800, 53.3500], [7.2800, 53.3000], [7.2400, 53.2400], [7.1600, 53.2500], [7.0800, 53.3300]],
+      eems: [[6.7800, 53.4800], [6.8800, 53.4500], [6.9800, 53.3900], [7.0500, 53.3400], [7.1000, 53.3200]],
+      lauwersmeer: [[6.1500, 53.3600], [6.2400, 53.3400], [6.2500, 53.4100], [6.1800, 53.4100], [6.1500, 53.3600]],
+      hogeland: [[6.3500, 53.3400], [6.6500, 53.3400], [6.7200, 53.4200], [6.4200, 53.4200], [6.3500, 53.3400]],
+      westerwolde: [[6.9800, 52.9200], [7.0800, 52.8700], [7.1300, 53.0300], [7.1800, 53.1200], [7.0500, 53.1500], [6.96, 53.0000], [6.9800, 52.9200]],
+      rottumerplaat: [[6.4300, 53.5350], [6.5100, 53.5450], [6.5300, 53.5400], [6.4600, 53.5300], [6.4300, 53.5350]],
+      rottumeroog: [[6.5500, 53.5380], [6.6100, 53.5450], [6.6200, 53.5350], [6.5600, 53.5320], [6.5500, 53.5380]],
+      // Belangrijke hoofdwegen voor oriëntatie conform de leskaart
+      roads: [
+        // A7: van Friesland door Groningen naar Duitsland
+        [[6.1800, 53.1800], [6.4200, 53.1900], [6.5665, 53.2194], [6.7583, 53.1611], [7.0347, 53.1436], [7.2069, 53.1814], [7.2600, 53.1900]],
+        // N33: Eemshaven/Delfzijl -> Veendam -> Stadskanaal -> Ter Apel
+        [[6.8000, 53.4400], [6.7611, 53.4222], [6.8569, 53.3217], [6.7583, 53.1611], [6.9236, 53.1067], [6.9536, 52.9906], [7.0628, 52.8767]],
+        // N46: Groningen stad naar Eemshaven/Roodeschool
+        [[6.5665, 53.2194], [6.6400, 53.3000], [6.7611, 53.4222]]
+      ]
+    };
+
     // Kindvriendelijke provinciekleuren volgens de TopTopo leskaart
     const PROVINCE_COLORS = {
       "Groningen": "#e74c3c",
@@ -594,11 +1076,11 @@
         { type: "Feature", properties: { name: "Friesland" }, geometry: { type: "MultiPolygon", coordinates: [[[[5.39, 53.11], [5.42, 53.17], [5.48, 53.22], [5.66, 53.28], [5.90, 53.37], [5.97, 53.38], [6.16, 53.38], [6.23, 53.34], [6.28, 53.28], [6.20, 53.18], [6.10, 53.10], [6.08, 53.05], [6.06, 53.00], [5.93, 52.96], [5.99, 52.88], [5.88, 52.84], [5.71, 52.84], [5.53, 52.85], [5.36, 52.88], [5.40, 52.94], [5.44, 52.98], [5.40, 53.06], [5.39, 53.11]]], [[[4.73, 53.01], [4.71, 53.08], [4.82, 53.17], [4.89, 53.16], [4.87, 53.08], [4.80, 53.03], [4.73, 53.01]]], [[[4.93, 53.24], [5.02, 53.28], [5.11, 53.32], [5.08, 53.29], [4.97, 53.25], [4.93, 53.24]]], [[[5.19, 53.36], [5.28, 53.39], [5.45, 53.44], [5.55, 53.44], [5.42, 53.39], [5.24, 53.35], [5.19, 53.36]]], [[[5.62, 53.43], [5.75, 53.46], [5.92, 53.47], [5.85, 53.44], [5.69, 53.42], [5.62, 53.43]]], [[[6.15, 53.47], [6.26, 53.50], [6.35, 53.51], [6.28, 53.48], [6.17, 53.46], [6.15, 53.47]]]] } },
         { type: "Feature", properties: { name: "Drenthe" }, geometry: { type: "Polygon", coordinates: [[[6.43, 53.14], [6.58, 53.14], [6.68, 53.09], [6.76, 53.01], [6.79, 52.92], [6.90, 52.78], [6.99, 52.72], [6.74, 52.66], [6.48, 52.73], [6.19, 52.70], [6.32, 52.86], [6.35, 52.95], [6.40, 53.04], [6.43, 53.14]]] } },
         { type: "Feature", properties: { name: "Overijssel" }, geometry: { type: "Polygon", coordinates: [[[5.84, 52.79], [6.12, 52.79], [6.08, 52.72], [6.07, 52.64], [5.91, 52.56], [6.09, 52.51], [6.21, 52.58], [6.46, 52.60], [6.62, 52.57], [6.78, 52.41], [7.00, 52.38], [6.93, 52.31], [7.00, 52.26], [6.89, 52.22], [6.74, 52.16], [6.56, 52.20], [6.45, 52.22], [6.16, 52.26], [6.12, 52.34], [6.14, 52.39], [6.09, 52.51], [5.91, 52.56], [5.84, 52.79]]] } },
-        { type: "Feature", properties: { name: "Flevoland" }, geometry: { type: "MultiPolygon", coordinates: [[[[5.71, 52.83], [5.69, 52.80], [5.65, 52.76], [5.62, 52.72], [5.60, 52.66], [5.67, 52.67], [5.77, 52.63], [5.83, 52.63], [5.87, 52.60], [5.94, 52.67], [5.84, 52.79], [5.71, 52.83]]], [[[5.44, 52.53], [5.42, 52.50], [5.33, 52.44], [5.15, 52.35], [5.22, 52.33], [5.30, 52.31], [5.48, 52.30], [5.62, 52.36], [5.70, 52.45], [5.85, 52.57], [5.68, 52.60], [5.44, 52.53]]]] } },
+        { type: "Feature", properties: { name: "Flevoland" }, geometry: { type: "MultiPolygon", coordinates: [[[[5.71, 52.83], [5.84, 52.79], [5.94, 52.67], [5.87, 52.60], [5.83, 52.63], [5.77, 52.63], [5.67, 52.67], [5.60, 52.66], [5.62, 52.72], [5.65, 52.76], [5.69, 52.80], [5.71, 52.83]]], [[[5.44, 52.53], [5.68, 52.60], [5.85, 52.57], [5.70, 52.45], [5.62, 52.36], [5.48, 52.30], [5.30, 52.31], [5.22, 52.33], [5.15, 52.35], [5.33, 52.44], [5.42, 52.50], [5.44, 52.53]]]] } },
         { type: "Feature", properties: { name: "Gelderland" }, geometry: { type: "Polygon", coordinates: [[[5.83, 52.45], [6.07, 52.47], [5.98, 52.35], [5.96, 52.21], [6.20, 52.14], [6.42, 52.16], [6.52, 52.11], [6.65, 52.10], [6.62, 52.04], [6.72, 51.97], [6.58, 51.93], [6.49, 51.86], [6.25, 51.87], [6.12, 51.85], [6.05, 51.87], [5.86, 51.84], [5.72, 51.81], [5.61, 51.89], [5.43, 51.88], [5.28, 51.88], [5.22, 51.95], [5.34, 51.97], [5.57, 51.96], [5.66, 51.97], [5.91, 51.99], [5.77, 52.10], [5.58, 52.14], [5.48, 52.22], [5.60, 52.26], [5.63, 52.30], [5.63, 52.34], [5.78, 52.38], [5.83, 52.45]]] } },
         { type: "Feature", properties: { name: "Utrecht" }, geometry: { type: "Polygon", coordinates: [[[5.26, 52.25], [5.38, 52.25], [5.39, 52.16], [5.43, 52.13], [5.41, 52.08], [5.55, 52.03], [5.57, 51.96], [5.46, 51.99], [5.34, 51.97], [5.20, 52.07], [5.16, 52.03], [5.08, 52.03], [5.04, 52.02], [4.88, 52.09], [4.90, 52.21], [4.93, 52.22], [4.97, 52.27], [5.28, 52.21], [5.26, 52.25]]] } },
-        { type: "Feature", properties: { name: "Noord-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.74, 52.96], [4.73, 52.89], [4.65, 52.77], [4.65, 52.71], [4.63, 52.66], [4.62, 52.62], [4.65, 52.55], [4.59, 52.49], [4.56, 52.46], [4.53, 52.41], [4.53, 52.37], [4.58, 52.31], [4.64, 52.27], [4.76, 52.26], [4.86, 52.28], [5.04, 52.31], [5.07, 52.33], [5.16, 52.30], [5.25, 52.30], [5.18, 52.22], [5.08, 52.21], [4.95, 52.38], [4.97, 52.39], [5.02, 52.38], [5.11, 52.46], [5.04, 52.46], [5.07, 52.50], [5.06, 52.52], [5.01, 52.56], [5.06, 52.64], [5.12, 52.63], [5.29, 52.70], [5.11, 52.77], [5.22, 52.74], [5.08, 52.85], [5.03, 52.93], [4.93, 52.92], [4.84, 52.88], [4.80, 52.92], [4.74, 52.96]]] } },
-        { type: "Feature", properties: { name: "Zuid-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.43, 52.24], [4.40, 52.20], [4.38, 52.14], [4.28, 52.11], [4.30, 52.08], [4.17, 52.02], [4.12, 51.98], [4.03, 51.96], [4.10, 51.91], [3.93, 51.81], [4.16, 51.76], [4.35, 51.68], [4.44, 51.69], [4.63, 51.70], [4.67, 51.81], [4.77, 51.82], [4.97, 51.83], [5.09, 51.89], [4.85, 51.95], [4.71, 52.02], [4.66, 52.13], [4.49, 52.16], [4.43, 52.24]]] } },
+        { type: "Feature", properties: { name: "Noord-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.74, 52.96], [4.80, 52.92], [4.84, 52.88], [4.93, 52.92], [5.03, 52.93], [5.08, 52.85], [5.22, 52.74], [5.11, 52.77], [5.29, 52.70], [5.12, 52.63], [5.06, 52.64], [5.01, 52.56], [5.06, 52.52], [5.07, 52.50], [5.04, 52.46], [5.11, 52.46], [5.02, 52.38], [4.97, 52.39], [4.95, 52.38], [5.08, 52.21], [5.18, 52.22], [5.25, 52.30], [5.16, 52.30], [5.07, 52.33], [5.04, 52.31], [4.86, 52.28], [4.76, 52.26], [4.64, 52.27], [4.58, 52.31], [4.53, 52.37], [4.53, 52.41], [4.56, 52.46], [4.59, 52.49], [4.65, 52.55], [4.62, 52.62], [4.63, 52.66], [4.65, 52.71], [4.65, 52.77], [4.73, 52.89], [4.74, 52.96]]] } },
+        { type: "Feature", properties: { name: "Zuid-Holland" }, geometry: { type: "Polygon", coordinates: [[[4.43, 52.24], [4.49, 52.16], [4.66, 52.13], [4.71, 52.02], [4.85, 51.95], [5.09, 51.89], [4.97, 51.83], [4.77, 51.82], [4.67, 51.81], [4.63, 51.70], [4.44, 51.69], [4.35, 51.68], [4.16, 51.76], [3.93, 51.81], [4.10, 51.91], [4.03, 51.96], [4.12, 51.98], [4.17, 52.02], [4.30, 52.08], [4.28, 52.11], [4.38, 52.14], [4.40, 52.20], [4.43, 52.24]]] } },
         { type: "Feature", properties: { name: "Zeeland" }, geometry: { type: "MultiPolygon", coordinates: [[[[3.69, 51.72], [3.78, 51.76], [3.98, 51.74], [4.13, 51.66], [3.97, 51.64], [3.75, 51.67], [3.69, 51.72]]], [[[4.10, 51.62], [4.19, 51.64], [4.24, 51.58], [4.18, 51.50], [4.09, 51.54], [4.10, 51.62]]], [[[3.66, 51.58], [3.77, 51.60], [3.86, 51.57], [3.81, 51.54], [3.68, 51.55], [3.66, 51.58]]], [[[3.44, 51.53], [3.56, 51.60], [3.72, 51.54], [3.89, 51.53], [4.02, 51.50], [4.15, 51.44], [4.22, 51.40], [4.12, 51.38], [3.92, 51.42], [3.69, 51.44], [3.58, 51.45], [3.48, 51.49], [3.44, 51.53]]], [[[3.37, 51.37], [3.56, 51.40], [3.71, 51.37], [3.83, 51.34], [3.98, 51.35], [4.13, 51.36], [4.21, 51.30], [4.08, 51.24], [3.84, 51.23], [3.57, 51.23], [3.36, 51.22], [3.37, 51.37]]]] } },
         { type: "Feature", properties: { name: "Noord-Brabant" }, geometry: { type: "Polygon", coordinates: [[[4.28, 51.42], [4.29, 51.50], [4.32, 51.59], [4.44, 51.69], [4.86, 51.70], [5.06, 51.69], [5.30, 51.70], [5.52, 51.77], [5.74, 51.76], [5.88, 51.73], [5.95, 51.65], [5.97, 51.56], [5.79, 51.46], [5.71, 51.38], [5.62, 51.31], [5.46, 51.35], [5.32, 51.29], [5.22, 51.37], [4.93, 51.44], [4.66, 51.47], [4.46, 51.53], [4.28, 51.42]]] } },
         { type: "Feature", properties: { name: "Limburg" }, geometry: { type: "Polygon", coordinates: [[[5.88, 51.75], [5.97, 51.70], [6.04, 51.60], [6.18, 51.47], [6.17, 51.37], [6.13, 51.34], [6.08, 51.28], [5.99, 51.19], [5.87, 51.10], [5.86, 51.00], [5.83, 50.97], [5.80, 50.94], [5.75, 50.88], [5.69, 50.85], [5.70, 50.78], [5.89, 50.81], [6.02, 50.77], [6.06, 50.86], [5.98, 50.89], [6.03, 50.91], [5.97, 50.95], [5.86, 51.00], [5.88, 51.14], [5.71, 51.25], [5.88, 51.35], [6.05, 51.45], [5.98, 51.53], [5.97, 51.70], [5.88, 51.75]]] } }
@@ -784,22 +1266,56 @@
     }
 
     /* ==========================================================================
-       4. SPELTOESTAND & MODI BEHEER
+       4. SPELTOESTAND & MULTI-MODULE BEHEER
        ========================================================================== */
-    let currentMode = 'explore'; // 'explore', 'locate', 'spell'
-    let selectedWater = null;
-    let targetWater = null;
+    let currentModuleId = 'wateren'; // Standaard actief: Wateren van Nederland (17)
+    let currentMode = 'explore';        // 'explore', 'locate', 'spell'
+    let selectedItem = null;
+    let targetItem = null;
     let quizQueue = [];
-    let scoreStars = 0;
-    let currentStreak = 0;
     let totalCorrectAnswers = 0;
     let totalMistakes = 0;
-    
-    // Onafhankelijke registratie per spelmodus
-    let exploredSet = new Set();          // Voor Oefenen & Verkennen
-    let locateCompletedSet = new Set();   // Voor Aanwijzen quiz
-    let spellCompletedSet = new Set();    // Voor Spellen quiz
     let isProcessingAnswer = false;
+    let currentFilterCategory = 'all';  // Voor lijst filtering: 'all', 'stad', 'gebied', 'water'
+
+    // Onafhankelijke registratie en score per module
+    const moduleProgress = {
+      wateren: {
+        explored: new Set(),
+        locate: new Set(),
+        spell: new Set(),
+        scoreStars: 0,
+        currentStreak: 0
+      },
+      groningen: {
+        explored: new Set(),
+        locate: new Set(),
+        spell: new Set(),
+        scoreStars: 0,
+        currentStreak: 0
+      }
+    };
+
+    function getCurrentModule() {
+      return LESSON_MODULES[currentModuleId] || LESSON_MODULES.wateren;
+    }
+
+    function getCurrentItems() {
+      return getCurrentModule().items;
+    }
+
+    function getCurrentProgress() {
+      if (!moduleProgress[currentModuleId]) {
+        moduleProgress[currentModuleId] = {
+          explored: new Set(),
+          locate: new Set(),
+          spell: new Set(),
+          scoreStars: 0,
+          currentStreak: 0
+        };
+      }
+      return moduleProgress[currentModuleId];
+    }
 
     let spellSubmode = 'tiles'; // 'tiles' of 'typing'
     let spellingUserLetters = [];
@@ -808,19 +1324,44 @@
     let d3Projection = null;
     let d3Svg = null;
     let d3ZoomBehavior = null;
+    let cachedGeoData = null;
 
     /* ==========================================================================
-       5. KAART GENERATIE MET D3.JS & OFFICIËLE GEOJSON
+       5. KAART GENERATIE MET D3.JS & DYNAMISCHE MODULE PROJECTIE
        ========================================================================== */
+    // Garandeert dat polygoon-windrichting conform D3 sferische standaarden is
+    function normalizeFeature(f) {
+      if (!f || !f.geometry) return f;
+      if (d3.geoArea(f) > 2 * Math.PI) {
+        if (f.geometry.type === 'Polygon') {
+          f.geometry.coordinates = f.geometry.coordinates.map(ring => ring.slice().reverse());
+        } else if (f.geometry.type === 'MultiPolygon') {
+          f.geometry.coordinates = f.geometry.coordinates.map(poly => poly.map(ring => ring.slice().reverse()));
+        }
+      }
+      return f;
+    }
+
+    function normalizeGeoJSON(geo) {
+      if (!geo) return geo;
+      if (geo.features && Array.isArray(geo.features)) {
+        geo.features.forEach(normalizeFeature);
+      } else if (geo.type === 'Feature') {
+        normalizeFeature(geo);
+      }
+      return geo;
+    }
+
     async function initD3Map() {
       d3Svg = d3.select("#svgNederland");
       const spinner = document.getElementById("mapLoadingSpinner");
-      if (spinner) spinner.style.opacity = "1";
+      if (spinner) {
+        spinner.style.display = "flex";
+        spinner.style.opacity = "1";
+      }
 
       // 1. Officiële GeoJSON ophalen via CDN
-      let geoData = null;
       const cdnEndpoints = [
-        "https://raw.githubusercontent.com/creharmony/geojson-netherlands-provinces/master/provinces.geojson",
         "https://cdn.jsdelivr.net/gh/codeforgermany/click_that_hood@master/public/data/the-netherlands.geojson"
       ];
 
@@ -828,7 +1369,7 @@
         try {
           const res = await d3.json(url);
           if (res && res.features && res.features.length >= 11) {
-            geoData = res;
+            cachedGeoData = normalizeGeoJSON(res);
             break;
           }
         } catch (err) {
@@ -836,214 +1377,427 @@
         }
       }
 
-      // Val terug op ingebouwde anatomische data indien CDN onbereikbaar is
-      if (!geoData || !geoData.features) {
-        geoData = BACKUP_PROVINCES_GEOJSON;
+      // Val terug op anatomische provinciedata indien offline
+      if (!cachedGeoData || !cachedGeoData.features) {
+        cachedGeoData = normalizeGeoJSON(JSON.parse(JSON.stringify(BACKUP_PROVINCES_GEOJSON)));
       }
 
-      // 2. D3 Mercator projectie gecentreerd op Nederland
-      d3Projection = d3.geoMercator()
-        .center([5.3, 52.1])
-        .fitExtent([[30, 30], [770, 930]], geoData);
+      setupZoomBehavior();
+      renderCurrentModuleMap();
 
-      const pathGenerator = d3.geoPath().projection(d3Projection);
-
-      // Verberg loading spinner
       if (spinner) {
         spinner.style.opacity = "0";
         setTimeout(() => spinner.style.display = "none", 350);
       }
+    }
 
-      // Noordzee zeeoppervlak direct klikbaar maken
-      d3.select("#rectNorthSea").on("click", (e) => handleAreaClick(11, e));
+    function renderCurrentModuleMap() {
+      if (!cachedGeoData) return;
 
-      // 3. Zeeën & Meren oppervlakten
+      const module = getCurrentModule();
+      const isGroningen = currentModuleId === 'groningen';
+
+      // 1. D3 Mercator Projectie instellen
+      if (isGroningen) {
+        // Focus en zoom nauwkeurig in op de provincie Groningen, Wadden en grensstreek
+        const groningenExtent = normalizeFeature({
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [[[6.05, 52.80], [6.05, 53.60], [7.32, 53.60], [7.32, 52.80], [6.05, 52.80]]]
+          }
+        });
+        d3Projection = d3.geoMercator().fitExtent([[40, 50], [760, 910]], groningenExtent);
+      } else {
+        // Volledig Nederland overzicht voor wateren
+        d3Projection = d3.geoMercator().fitExtent([[30, 30], [770, 930]], cachedGeoData);
+      }
+
+      const pathGenerator = d3.geoPath().projection(d3Projection);
+
+      // Noordzee achtergrond klikbaar
+      d3.select("#rectNorthSea").on("click", (e) => {
+        if (!isGroningen) handleAreaClick(11, e);
+      });
+
+      // 2. Zeeën & Meren (Waddenzee, IJsselmeer, Veluwemeer)
       const seasLayer = d3.select("#layerSeasLakes");
       seasLayer.selectAll("*").remove();
 
-      // Waddenzee (IV)
-      const waddenCoords = WATER_GEOMETRIES.waddenzee.map(d3Projection);
-      seasLayer.append("path")
-        .attr("id", "area-waddenzee")
-        .attr("d", d3.line().curve(d3.curveBasisClosed)(waddenCoords))
-        .attr("fill", "#60a5fa")
-        .attr("opacity", 0.45)
-        .attr("stroke", "#38bdf8")
-        .attr("stroke-width", 2)
-        .attr("class", "cursor-pointer transition-colors")
-        .on("click", (e) => handleAreaClick(4, e));
+      if (!isGroningen) {
+        // Waddenzee (IV)
+        const waddenCoords = WATER_GEOMETRIES.waddenzee.map(d3Projection);
+        seasLayer.append("path")
+          .attr("id", "area-waddenzee")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(waddenCoords))
+          .attr("fill", "#60a5fa")
+          .attr("opacity", 0.45)
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", 2)
+          .attr("class", "cursor-pointer transition-colors")
+          .on("click", (e) => handleAreaClick(4, e));
 
-      // IJsselmeer (XV)
-      const ijsselmeerCoords = WATER_GEOMETRIES.ijsselmeer.map(d3Projection);
-      seasLayer.append("path")
-        .attr("id", "area-ijsselmeer")
-        .attr("d", d3.line().curve(d3.curveBasisClosed)(ijsselmeerCoords))
-        .attr("fill", "#38bdf8")
-        .attr("opacity", 0.82)
-        .attr("stroke", "#0284c7")
-        .attr("stroke-width", 2.5)
-        .attr("class", "cursor-pointer transition-colors")
-        .on("click", (e) => handleAreaClick(15, e));
+        // IJsselmeer (XV)
+        const ijsselmeerCoords = WATER_GEOMETRIES.ijsselmeer.map(d3Projection);
+        seasLayer.append("path")
+          .attr("id", "area-ijsselmeer")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(ijsselmeerCoords))
+          .attr("fill", "#38bdf8")
+          .attr("opacity", 0.82)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 2.5)
+          .attr("class", "cursor-pointer transition-colors")
+          .on("click", (e) => handleAreaClick(15, e));
 
-      // Veluwemeer (XIII)
-      const veluweCoords = WATER_GEOMETRIES.veluwemeer.map(d3Projection);
-      seasLayer.append("path")
-        .attr("id", "path-water-13")
-        .attr("d", d3.line().curve(d3.curveBasis)(veluweCoords))
-        .attr("fill", "none")
-        .attr("stroke", "#38bdf8")
-        .attr("stroke-width", 8)
-        .attr("stroke-linecap", "round")
-        .attr("class", "cursor-pointer transition-all")
-        .on("click", (e) => handleAreaClick(13, e));
+        // Veluwemeer (XIII)
+        const veluweCoords = WATER_GEOMETRIES.veluwemeer.map(d3Projection);
+        seasLayer.append("path")
+          .attr("id", "path-water-13")
+          .attr("d", d3.line().curve(d3.curveBasis)(veluweCoords))
+          .attr("fill", "none")
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", 8)
+          .attr("stroke-linecap", "round")
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", (e) => handleAreaClick(13, e));
+      }
 
-      // 4. De Provincies tekenen
+      // 3. De Provincies tekenen
       const provLayer = d3.select("#layerProvinces");
       provLayer.selectAll("*").remove();
 
       provLayer.selectAll(".province")
-        .data(geoData.features)
+        .data(cachedGeoData.features)
         .enter()
         .append("path")
         .attr("class", "province transition-all duration-200")
         .attr("d", pathGenerator)
         .attr("fill", (d, idx) => {
           const name = d.properties.name || d.properties.statnaam || d.properties.provincienaam || "";
+          if (isGroningen) {
+            // Groningen in TopTopo groen, buurprovincies in zacht neutraal
+            if (name.includes("Groningen")) return "#84cc16";
+            if (name.includes("Friesland") || name.includes("Fryslân") || name.includes("Drenthe")) return "#e2e8f0";
+            return "#f1f5f9";
+          }
           return PROVINCE_COLORS[name] || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
         })
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 2.2)
+        .attr("stroke", isGroningen ? "#ffffff" : "#ffffff")
+        .attr("stroke-width", isGroningen ? 2.5 : 2.2)
         .attr("stroke-linejoin", "round")
-        .on("pointerenter", function() {
-          d3.select(this).attr("stroke-width", 3.8).attr("stroke", "#f1c40f");
+        .on("pointerenter", function(event, d) {
+          if (!isGroningen) {
+            d3.select(this).attr("stroke-width", 3.8).attr("stroke", "#f1c40f");
+          }
         })
-        .on("pointerleave", function() {
-          d3.select(this).attr("stroke-width", 2.2).attr("stroke", "#ffffff");
+        .on("pointerleave", function(event, d) {
+          if (!isGroningen) {
+            d3.select(this).attr("stroke-width", 2.2).attr("stroke", "#ffffff");
+          }
         });
 
-      // 5. Dijken en Rivieren
+      // 4. Groningen Specifieke Gebieden (Hoge land & Westerwolde)
+      const regionsLayer = d3.select("#layerGroningenRegions");
+      regionsLayer.selectAll("*").remove();
+
+      if (isGroningen) {
+        // Hoge land (c) zachte markering
+        const hogelandCoords = GRONINGEN_GEOMETRIES.hogeland.map(d3Projection);
+        regionsLayer.append("path")
+          .attr("id", "area-gro-c")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(hogelandCoords))
+          .attr("fill", "#a3e635")
+          .attr("opacity", 0.45)
+          .attr("stroke", "#65a30d")
+          .attr("stroke-width", 1.8)
+          .attr("stroke-dasharray", "4, 3")
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-c');
+            if (item) onSelectItem(item);
+          });
+
+        // Westerwolde (d) zachte markering
+        const westerwoldeCoords = GRONINGEN_GEOMETRIES.westerwolde.map(d3Projection);
+        regionsLayer.append("path")
+          .attr("id", "area-gro-d")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(westerwoldeCoords))
+          .attr("fill", "#84cc16")
+          .attr("opacity", 0.45)
+          .attr("stroke", "#4d7c0f")
+          .attr("stroke-width", 1.8)
+          .attr("stroke-dasharray", "4, 3")
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-d');
+            if (item) onSelectItem(item);
+          });
+
+        // Lauwersmeer oppervlak
+        const lauwersCoords = GRONINGEN_GEOMETRIES.lauwersmeer.map(d3Projection);
+        regionsLayer.append("path")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(lauwersCoords))
+          .attr("fill", "#38bdf8")
+          .attr("opacity", 0.8)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 2);
+
+        // Rottumerplaat eiland (a)
+        const plaatCoords = GRONINGEN_GEOMETRIES.rottumerplaat.map(d3Projection);
+        regionsLayer.append("path")
+          .attr("id", "area-gro-a")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(plaatCoords))
+          .attr("fill", "#fef08a")
+          .attr("stroke", "#ca8a04")
+          .attr("stroke-width", 1.8)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-a');
+            if (item) onSelectItem(item);
+          });
+
+        // Rottumeroog eiland (b)
+        const oogCoords = GRONINGEN_GEOMETRIES.rottumeroog.map(d3Projection);
+        regionsLayer.append("path")
+          .attr("id", "area-gro-b")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(oogCoords))
+          .attr("fill", "#fef08a")
+          .attr("stroke", "#ca8a04")
+          .attr("stroke-width", 1.8)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-b');
+            if (item) onSelectItem(item);
+          });
+      }
+
+      // 5. Wegen & Transit (oriëntatielijnen voor Groningen)
+      const transitLayer = d3.select("#layerTransit");
+      transitLayer.selectAll("*").remove();
+
+      if (isGroningen) {
+        GRONINGEN_GEOMETRIES.roads.forEach((roadCoords, idx) => {
+          transitLayer.append("path")
+            .attr("d", d3.line().curve(d3.curveCatmullRom)(roadCoords.map(d3Projection)))
+            .attr("fill", "none")
+            .attr("stroke", idx === 0 ? "#fb923c" : "#fdba74")
+            .attr("stroke-width", idx === 0 ? 3.5 : 2.2)
+            .attr("stroke-linecap", "round")
+            .attr("opacity", 0.75)
+            .attr("pointer-events", "none");
+        });
+      }
+
+      // 6. Waterwegen en Rivieren
       const riversLayer = d3.select("#layerRivers");
       riversLayer.selectAll("*").remove();
 
-      // Afsluitdijk
-      riversLayer.append("path")
-        .attr("d", d3.line()(WATER_GEOMETRIES.afsluitdijk.map(d3Projection)))
-        .attr("stroke", "#334155")
-        .attr("stroke-width", 4.5)
-        .attr("stroke-linecap", "round");
+      if (!isGroningen) {
+        // Dijken
+        riversLayer.append("path")
+          .attr("d", d3.line()(WATER_GEOMETRIES.afsluitdijk.map(d3Projection)))
+          .attr("stroke", "#334155")
+          .attr("stroke-width", 4.5)
+          .attr("stroke-linecap", "round");
 
-      // Houtribdijk
-      riversLayer.append("path")
-        .attr("d", d3.line()(WATER_GEOMETRIES.houtribdijk.map(d3Projection)))
-        .attr("stroke", "#475569")
-        .attr("stroke-dasharray", "5, 3");
+        riversLayer.append("path")
+          .attr("d", d3.line()(WATER_GEOMETRIES.houtribdijk.map(d3Projection)))
+          .attr("stroke", "#475569")
+          .attr("stroke-dasharray", "5, 3");
 
-      // Rivierdefinities
-      const riverDefinitions = [
-        { id: 17, path: WATER_GEOMETRIES.rijn, width: 7.5 },
-        { id: 10, path: WATER_GEOMETRIES.waal, width: 8.5 },
-        { id: 16, path: WATER_GEOMETRIES.nederrijn, width: 7 },
-        { id: 6,  path: WATER_GEOMETRIES.lek, width: 7 },
-        { id: 12, path: WATER_GEOMETRIES.nieuweWaterweg, width: 8 },
-        { id: 8,  path: WATER_GEOMETRIES.ijssel, width: 6.5 },
-        { id: 2,  path: WATER_GEOMETRIES.maas, width: 7.5 },
-        { id: 3,  path: WATER_GEOMETRIES.amsterdamRijnkanaal, width: 6 },
-        { id: 9,  path: WATER_GEOMETRIES.noordzeekanaal, width: 6.5 },
-        { id: 14, path: WATER_GEOMETRIES.twentekanaal, width: 6 },
-        { id: 1,  path: WATER_GEOMETRIES.scheldeRijnkanaal, width: 6 }
-      ];
+        // Nederlandse Rivieren
+        const riverDefinitions = [
+          { id: 17, path: WATER_GEOMETRIES.rijn, width: 7.5 },
+          { id: 10, path: WATER_GEOMETRIES.waal, width: 8.5 },
+          { id: 16, path: WATER_GEOMETRIES.nederrijn, width: 7 },
+          { id: 6,  path: WATER_GEOMETRIES.lek, width: 7 },
+          { id: 12, path: WATER_GEOMETRIES.nieuweWaterweg, width: 8 },
+          { id: 8,  path: WATER_GEOMETRIES.ijssel, width: 6.5 },
+          { id: 2,  path: WATER_GEOMETRIES.maas, width: 7.5 },
+          { id: 3,  path: WATER_GEOMETRIES.amsterdamRijnkanaal, width: 6 },
+          { id: 9,  path: WATER_GEOMETRIES.noordzeekanaal, width: 6.5 },
+          { id: 14, path: WATER_GEOMETRIES.twentekanaal, width: 6 },
+          { id: 1,  path: WATER_GEOMETRIES.scheldeRijnkanaal, width: 6 }
+        ];
 
-      riverDefinitions.forEach(item => {
-        const coords = item.path.map(d3Projection);
-        const curveGenerator = d3.line().curve(d3.curveCatmullRom);
+        riverDefinitions.forEach(item => {
+          const coords = item.path.map(d3Projection);
+          const curveGenerator = d3.line().curve(d3.curveCatmullRom);
 
-        const riverPath = riversLayer.append("path")
-          .attr("id", `path-water-${item.id}`)
-          .attr("d", curveGenerator(coords))
+          const riverPath = riversLayer.append("path")
+            .attr("id", `path-item-${item.id}`)
+            .attr("d", curveGenerator(coords))
+            .attr("fill", "none")
+            .attr("stroke", "#38bdf8")
+            .attr("stroke-width", item.width)
+            .attr("stroke-linecap", "round")
+            .attr("stroke-linejoin", "round")
+            .attr("class", "cursor-pointer transition-all");
+
+          riversLayer.append("path")
+            .attr("d", curveGenerator(coords))
+            .attr("fill", "none")
+            .attr("stroke", "transparent")
+            .attr("stroke-width", Math.max(32, item.width + 22))
+            .attr("class", "cursor-pointer")
+            .on("click", (e) => handleAreaClick(item.id, e));
+        });
+
+        const zeearmen = [
+          { id: 5, path: WATER_GEOMETRIES.westerschelde, width: 9.5 },
+          { id: 7, path: WATER_GEOMETRIES.oosterschelde, width: 10.5 }
+        ];
+
+        zeearmen.forEach(item => {
+          const coords = item.path.map(d3Projection);
+          const seaPath = riversLayer.append("path")
+            .attr("id", `path-item-${item.id}`)
+            .attr("d", d3.line().curve(d3.curveBasis)(coords))
+            .attr("fill", "none")
+            .attr("stroke", "#38bdf8")
+            .attr("stroke-width", item.width)
+            .attr("stroke-linecap", "round")
+            .attr("class", "cursor-pointer transition-all");
+
+          riversLayer.append("path")
+            .attr("d", d3.line().curve(d3.curveBasis)(coords))
+            .attr("fill", "none")
+            .attr("stroke", "transparent")
+            .attr("stroke-width", Math.max(32, item.width + 22))
+            .attr("class", "cursor-pointer")
+            .on("click", (e) => handleAreaClick(item.id, e));
+        });
+      } else {
+        // Groningen Waterwegen:
+        // Van Starkenborghkanaal (IV)
+        const starkCoords = GRONINGEN_GEOMETRIES.vanStarkenborghkanaal.map(d3Projection);
+        const starkPath = riversLayer.append("path")
+          .attr("id", "path-item-gro-IV")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(starkCoords))
           .attr("fill", "none")
-          .attr("stroke", "#38bdf8")
-          .attr("stroke-width", item.width)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 7)
           .attr("stroke-linecap", "round")
-          .attr("stroke-linejoin", "round")
           .attr("class", "cursor-pointer transition-all");
 
-        // Brede interactieve trefzone
         riversLayer.append("path")
-          .attr("d", curveGenerator(coords))
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(starkCoords))
           .attr("fill", "none")
           .attr("stroke", "transparent")
-          .attr("stroke-width", Math.max(32, item.width + 22))
+          .attr("stroke-width", 32)
           .attr("class", "cursor-pointer")
-          .on("pointerenter", () => {
-            if (!riverPath.classed("highlight-flowing-river")) {
-              riverPath.attr("stroke", "#7dd3fc").attr("stroke-width", item.width + 2);
-            }
-          })
-          .on("pointerleave", () => {
-            if (!riverPath.classed("highlight-flowing-river")) {
-              riverPath.attr("stroke", "#38bdf8").attr("stroke-width", item.width);
-            }
-          })
-          .on("click", (e) => handleAreaClick(item.id, e));
-      });
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-IV');
+            if (item) onSelectItem(item);
+          });
 
-      // Zeearmen (Westerschelde en Oosterschelde)
-      const zeearmen = [
-        { id: 5, path: WATER_GEOMETRIES.westerschelde, width: 9.5 },
-        { id: 7, path: WATER_GEOMETRIES.oosterschelde, width: 10.5 }
-      ];
-
-      zeearmen.forEach(item => {
-        const coords = item.path.map(d3Projection);
-        const seaPath = riversLayer.append("path")
-          .attr("id", `path-water-${item.id}`)
-          .attr("d", d3.line().curve(d3.curveBasis)(coords))
+        // Eemskanaal (III)
+        const eemskanaalCoords = GRONINGEN_GEOMETRIES.eemskanaal.map(d3Projection);
+        const eemskPath = riversLayer.append("path")
+          .attr("id", "path-item-gro-III")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(eemskanaalCoords))
           .attr("fill", "none")
-          .attr("stroke", "#38bdf8")
-          .attr("stroke-width", item.width)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 7)
           .attr("stroke-linecap", "round")
           .attr("class", "cursor-pointer transition-all");
 
-        // Brede interactieve trefzone
         riversLayer.append("path")
-          .attr("d", d3.line().curve(d3.curveBasis)(coords))
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(eemskanaalCoords))
           .attr("fill", "none")
           .attr("stroke", "transparent")
-          .attr("stroke-width", Math.max(32, item.width + 22))
+          .attr("stroke-width", 32)
           .attr("class", "cursor-pointer")
-          .on("pointerenter", () => {
-            if (!seaPath.classed("highlight-flowing-river")) {
-              seaPath.attr("stroke", "#7dd3fc").attr("stroke-width", item.width + 2);
-            }
-          })
-          .on("pointerleave", () => {
-            if (!seaPath.classed("highlight-flowing-river")) {
-              seaPath.attr("stroke", "#38bdf8").attr("stroke-width", item.width);
-            }
-          })
-          .on("click", (e) => handleAreaClick(item.id, e));
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-III');
+            if (item) onSelectItem(item);
+          });
+
+        // Dollard zeearm (I)
+        const dollardCoords = GRONINGEN_GEOMETRIES.dollard.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "path-item-gro-I")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(dollardCoords))
+          .attr("fill", "#38bdf8")
+          .attr("opacity", 0.75)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 2)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-I');
+            if (item) onSelectItem(item);
+          });
+
+        // Eems riviermonding (II)
+        const eemsCoords = GRONINGEN_GEOMETRIES.eems.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "path-item-gro-II")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(eemsCoords))
+          .attr("fill", "none")
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", 14)
+          .attr("stroke-linecap", "round")
+          .attr("opacity", 0.85)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = GRONINGEN_DATA.find(x => x.id === 'gro-II');
+            if (item) onSelectItem(item);
+          });
+      }
+
+      // 7. Coördinaten projecteren voor alle items in de actieve module
+      const items = getCurrentItems();
+      items.forEach(item => {
+        const [px, py] = d3Projection([item.lng, item.lat]);
+        item.x = px;
+        item.y = py;
       });
 
-      // 6. Coördinaten projecteren voor alle 17 Water Pins
-      WATERS_DATA.forEach(water => {
-        const [px, py] = d3Projection([water.lng, water.lat]);
-        water.x = px;
-        water.y = py;
-      });
-
-      // 7. Pins renderen op exacte geprojecteerde posities
+      // 8. Pins renderen
       renderPinsLayer();
 
-      // 8. Zoom & Pan gedrag initialiseren
-      setupZoomBehavior();
+      // Inset map tonen of verbergen
+      const insetEl = document.getElementById('groningenInsetMap');
+      if (insetEl) {
+        if (isGroningen) {
+          insetEl.classList.remove('hidden');
+          insetEl.classList.add('flex');
+        } else {
+          insetEl.classList.add('hidden');
+          insetEl.classList.remove('flex');
+        }
+      }
+
+      // Legenda onderaan updaten
+      const legEl = document.getElementById('mapLegendContent');
+      if (legEl) {
+        if (isGroningen) {
+          legEl.innerHTML = `
+            <div class="flex items-center gap-1.5"><span class="text-xs">⦿</span><span>Hoofdstad</span></div>
+            <div class="w-px h-3 bg-sky-200"></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block shadow-sm"></span><span>Stad</span></div>
+            <div class="w-px h-3 bg-sky-200"></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-lime-600 inline-block shadow-sm"></span><span>Gebied</span></div>
+            <div class="w-px h-3 bg-sky-200"></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block shadow-sm"></span><span>Water</span></div>
+          `;
+        } else {
+          legEl.innerHTML = `
+            <div class="w-3 h-3 rounded-full bg-cyan-400 border border-white flex items-center justify-center text-[8px] text-white">≋</div>
+            <span>Water (I-XVII)</span>
+          `;
+        }
+      }
     }
 
     function renderPinsLayer() {
       const pinsLayer = d3.select("#layerPins");
       pinsLayer.selectAll("*").remove();
+      const items = getCurrentItems();
+      const isGroningen = currentModuleId === 'groningen';
 
       const pinGroups = pinsLayer.selectAll(".map-pin")
-        .data(WATERS_DATA, d => d.id)
+        .data(items, d => d.id)
         .enter()
         .append("g")
         .attr("id", d => `pin-group-${d.id}`)
@@ -1051,67 +1805,152 @@
         .attr("transform", d => `translate(${d.x}, ${d.y})`)
         .on("click", function(event, d) {
           event.stopPropagation();
-          onSelectWater(d);
+          onSelectItem(d);
         });
 
-      // Geanimeerde container gecentreerd op lokaal punt (0, 0)
-      const pinInner = pinGroups.append("g")
-        .attr("class", "pin-inner");
+      const pinInner = pinGroups.append("g").attr("class", "pin-inner");
 
-      // Touchzone voor kinderhanden
+      // Ruime touchzone voor kinderen
       pinInner.append("circle")
         .attr("r", 32)
         .attr("fill", "transparent")
         .attr("class", "cursor-pointer");
 
-      // Cyaan/waterblauwe ronde waterbadge conform de TopTopo leskaart
-      pinInner.append("circle")
-        .attr("class", "pin-circle shadow-lg")
-        .attr("r", 15)
-        .attr("fill", "#0284c7")
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 2.5);
+      if (!isGroningen) {
+        // Cyaan waterbadge met golfjes
+        pinInner.append("circle")
+          .attr("class", "pin-circle shadow-lg")
+          .attr("r", 15)
+          .attr("fill", "#0284c7")
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 2.5);
 
-      // Golflijntjes in de badge
-      pinInner.append("path")
-        .attr("d", "M -7 -4 Q -3.5 -6 0 -4 T 7 -4 M -7 0 Q -3.5 -2 0 0 T 7 0 M -7 4 Q -3.5 2 0 4 T 7 4")
-        .attr("fill", "none")
-        .attr("stroke", "#ffffff")
-        .attr("stroke-width", 1.6)
-        .attr("stroke-linecap", "round");
+        pinInner.append("path")
+          .attr("d", "M -7 -4 Q -3.5 -6 0 -4 T 7 -4 M -7 0 Q -3.5 -2 0 0 T 7 0 M -7 4 Q -3.5 2 0 4 T 7 4")
+          .attr("fill", "none")
+          .attr("stroke", "#ffffff")
+          .attr("stroke-width", 1.6)
+          .attr("stroke-linecap", "round");
 
-      // Romeins cijfer tekstje boven de waterbadge
-      const label = pinInner.append("g")
-        .attr("transform", "translate(0, -22)");
+        const label = pinInner.append("g").attr("transform", "translate(0, -22)");
+        label.append("rect")
+          .attr("class", "pin-label-rect shadow-sm")
+          .attr("x", -18).attr("y", -11).attr("width", 36).attr("height", 17).attr("rx", 6)
+          .attr("fill", "#ffffff").attr("stroke", "#0284c7").attr("stroke-width", 1.8);
+        label.append("text")
+          .attr("class", "pin-label-text")
+          .attr("text-anchor", "middle").attr("y", 2)
+          .attr("font-family", "Fredoka, sans-serif").attr("font-size", "11px").attr("font-weight", "bold")
+          .attr("fill", "#0c4a6e")
+          .text(d => d.code || d.roman);
+      } else {
+        // Pins conform de TopTopo leskaart:
+        pinInner.each(function(d) {
+          const g = d3.select(this);
 
-      label.append("rect")
-        .attr("class", "pin-label-rect shadow-sm")
-        .attr("x", -18)
-        .attr("y", -11)
-        .attr("width", 36)
-        .attr("height", 17)
-        .attr("rx", 6)
-        .attr("fill", "#ffffff")
-        .attr("stroke", "#0284c7")
-        .attr("stroke-width", 1.8);
+          if (d.category === 'hoofdstad') {
+            // 1. Hoofdstad: Dubbele rode cirkel met witte ring
+            g.append("circle")
+              .attr("class", "pin-circle shadow-lg")
+              .attr("r", 15)
+              .attr("fill", "#ef4444")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 3);
+            g.append("circle")
+              .attr("r", 10)
+              .attr("fill", "#ffffff");
+            g.append("circle")
+              .attr("r", 5.5)
+              .attr("fill", "#dc2626");
 
-      label.append("text")
-        .attr("class", "pin-label-text")
-        .attr("text-anchor", "middle")
-        .attr("y", 2)
-        .attr("font-family", "Fredoka, sans-serif")
-        .attr("font-size", "11px")
-        .attr("font-weight", "bold")
-        .attr("fill", "#0c4a6e")
-        .text(d => d.roman);
+            const label = g.append("g").attr("transform", "translate(0, -23)");
+            label.append("rect")
+              .attr("class", "pin-label-rect shadow-sm")
+              .attr("x", -16).attr("y", -11).attr("width", 32).attr("height", 18).attr("rx", 6)
+              .attr("fill", "#ffffff").attr("stroke", "#dc2626").attr("stroke-width", 2);
+            label.append("text")
+              .attr("class", "pin-label-text")
+              .attr("text-anchor", "middle").attr("y", 2.5)
+              .attr("font-family", "Fredoka, sans-serif").attr("font-size", "12px").attr("font-weight", "bold")
+              .attr("fill", "#991b1b")
+              .text("1");
+          } else if (d.category === 'stad') {
+            // 2. Stad (2-14): Rode gevulde stip
+            g.append("circle")
+              .attr("class", "pin-circle shadow-md")
+              .attr("r", 11)
+              .attr("fill", "#ef4444")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 2.5);
+
+            const label = g.append("g").attr("transform", "translate(0, -19)");
+            label.append("rect")
+              .attr("class", "pin-label-rect shadow-sm")
+              .attr("x", -14).attr("y", -9).attr("width", 28).attr("height", 16).attr("rx", 5)
+              .attr("fill", "#ffffff").attr("stroke", "#ef4444").attr("stroke-width", 1.8);
+            label.append("text")
+              .attr("class", "pin-label-text")
+              .attr("text-anchor", "middle").attr("y", 2.5)
+              .attr("font-family", "Fredoka, sans-serif").attr("font-size", "10px").attr("font-weight", "bold")
+              .attr("fill", "#991b1b")
+              .text(d.code);
+          } else if (d.category === 'gebied') {
+            // 3. Gebied (a-d): Groen afgerond vierkant
+            g.append("rect")
+              .attr("class", "pin-circle shadow-md")
+              .attr("x", -10).attr("y", -10).attr("width", 20).attr("height", 20).attr("rx", 5)
+              .attr("fill", "#65a30d")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 2.5);
+
+            const label = g.append("g").attr("transform", "translate(0, -19)");
+            label.append("rect")
+              .attr("class", "pin-label-rect shadow-sm")
+              .attr("x", -13).attr("y", -9).attr("width", 26).attr("height", 16).attr("rx", 5)
+              .attr("fill", "#ffffff").attr("stroke", "#65a30d").attr("stroke-width", 1.8);
+            label.append("text")
+              .attr("class", "pin-label-text")
+              .attr("text-anchor", "middle").attr("y", 2.5)
+              .attr("font-family", "Fredoka, sans-serif").attr("font-size", "11px").attr("font-weight", "bold")
+              .attr("fill", "#365314")
+              .text(d.code);
+          } else if (d.category === 'water') {
+            // 4. Water (I-IV): Blauwe ronde waterbadge
+            g.append("circle")
+              .attr("class", "pin-circle shadow-md")
+              .attr("r", 12)
+              .attr("fill", "#0284c7")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 2.5);
+            g.append("path")
+              .attr("d", "M -5 -2 Q -2.5 -4 0 -2 T 5 -2 M -5 2 Q -2.5 0 0 2 T 5 2")
+              .attr("fill", "none")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 1.4)
+              .attr("stroke-linecap", "round");
+
+            const label = g.append("g").attr("transform", "translate(0, -19)");
+            label.append("rect")
+              .attr("class", "pin-label-rect shadow-sm")
+              .attr("x", -15).attr("y", -9).attr("width", 30).attr("height", 16).attr("rx", 5)
+              .attr("fill", "#ffffff").attr("stroke", "#0284c7").attr("stroke-width", 1.8);
+            label.append("text")
+              .attr("class", "pin-label-text")
+              .attr("text-anchor", "middle").attr("y", 2.5)
+              .attr("font-family", "Fredoka, sans-serif").attr("font-size", "10px").attr("font-weight", "bold")
+              .attr("fill", "#0c4a6e")
+              .text(d.code);
+          }
+        });
+      }
     }
 
     function setupZoomBehavior() {
       const zoomContainer = d3.select("#zoomContainer");
 
       d3ZoomBehavior = d3.zoom()
-        .scaleExtent([1, 4.5])
-        .translateExtent([[-200, -200], [1000, 1160]])
+        .scaleExtent([1, 5.0])
+        .translateExtent([[-300, -300], [1100, 1260]])
         .filter(event => event.type !== 'dblclick')
         .on("zoom", (event) => {
           zoomContainer.attr("transform", event.transform);
@@ -1140,50 +1979,164 @@
 
     function handleAreaClick(waterId, event) {
       if (event) event.stopPropagation();
-      const water = WATERS_DATA.find(w => w.id === waterId);
-      if (water) {
-        onSelectWater(water);
+      const item = getCurrentItems().find(w => w.id === waterId || w.code === String(waterId));
+      if (item) {
+        onSelectItem(item);
       }
     }
 
     /* ==========================================================================
-       6. ZONE HIGHLIGHTING & VISUELE INDICATOREN
+       6. MODULE WISSELAAR & MODAL LOGICA
        ========================================================================== */
-    function highlightZone(water, status = 'active', showArrow = true) {
+    function switchModule(moduleId) {
+      if (!LESSON_MODULES[moduleId]) return;
+      currentModuleId = moduleId;
+      try {
+        localStorage.setItem('topokids_module', moduleId);
+      } catch (e) {}
+
+      const mod = LESSON_MODULES[moduleId];
+      stopAllSpeech();
+      unlockAudio();
+
+      // Header bijwerken
+      document.getElementById('headerLogoIcon').textContent = mod.icon;
+      document.getElementById('headerMainTitle').textContent = mod.name;
+      document.getElementById('headerBadgeText').textContent = mod.badgeText;
+      document.getElementById('headerSubtitle').textContent = mod.subtitle;
+      document.getElementById('headerMapBadgeText').textContent = mod.mapBadgeText;
+
+      // Pill knoppen in de header
+      const btnWateren = document.getElementById('btnModuleWateren');
+      const btnGroningen = document.getElementById('btnModuleGroningen');
+      if (moduleId === 'wateren') {
+        btnWateren.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-sky-950 shadow-sm";
+        btnGroningen.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-amber-900 hover:text-amber-950";
+      } else {
+        btnGroningen.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-amber-950 shadow-sm";
+        btnWateren.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-sky-800 hover:text-sky-950";
+      }
+
+      // Categorie filters in sidebar
+      const catFilterEl = document.getElementById('listCategoryFilter');
+      if (catFilterEl) {
+        if (mod.hasCategories) {
+          catFilterEl.classList.remove('hidden');
+          catFilterEl.classList.add('flex');
+        } else {
+          catFilterEl.classList.add('hidden');
+          catFilterEl.classList.remove('flex');
+        }
+      }
+      currentFilterCategory = 'all';
+      updateFilterButtonStyles();
+
+      // Zoom resetten en kaart renderen
+      if (d3Svg && d3ZoomBehavior) {
+        d3Svg.call(d3ZoomBehavior.transform, d3.zoomIdentity);
+      }
+      renderCurrentModuleMap();
+
+      // Reset selectie en start huidige modus opnieuw
+      selectedItem = null;
+      targetItem = null;
+      setMode(currentMode);
+      updateStatsDisplay();
+    }
+
+    function openModuleModal() {
+      const modal = document.getElementById('moduleSelectModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Highlight actieve kaart
+      ['wateren', 'groningen'].forEach(id => {
+        const card = document.getElementById(`moduleCard-${id}`);
+        if (card) {
+          if (id === currentModuleId) {
+            card.classList.add('ring-4', 'ring-amber-400', 'scale-[1.02]');
+          } else {
+            card.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.02]');
+          }
+        }
+      });
+    }
+
+    function closeModuleModal() {
+      const modal = document.getElementById('moduleSelectModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function selectModuleFromModal(id) {
+      closeModuleModal();
+      switchModule(id);
+    }
+
+    function setListCategoryFilter(cat) {
+      currentFilterCategory = cat;
+      updateFilterButtonStyles();
+      renderItemList();
+    }
+
+    function updateFilterButtonStyles() {
+      const cats = ['all', 'stad', 'gebied', 'water'];
+      cats.forEach(c => {
+        const btn = document.getElementById(`btnFilterCat-${c}`);
+        if (!btn) return;
+        if (c === currentFilterCategory) {
+          btn.className = "px-2 py-0.5 rounded-lg text-[11px] font-black bg-sky-500 text-white shadow-sm transition-all";
+        } else {
+          btn.className = "px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-sky-100 transition-all";
+        }
+      });
+    }
+
+    /* ==========================================================================
+       7. ZONE HIGHLIGHTING & VISUELE INDICATOREN
+       ========================================================================== */
+    function highlightZone(item, status = 'active', showArrow = true) {
       const layer = d3.select("#layerHighlights");
       layer.selectAll("*").remove();
 
       d3.selectAll(".highlight-flowing-river").classed("highlight-flowing-river", false);
       d3.selectAll(".active-target").classed("active-target", false);
 
-      if (!water) return;
+      if (!item) return;
 
-      const px = water.x;
-      const py = water.y;
+      const px = item.x;
+      const py = item.y;
 
       // 1. Pulserende radar om de zone
       const beaconGroup = layer.append("g")
         .attr("transform", `translate(${px}, ${py})`);
 
       beaconGroup.append("circle")
-        .attr("r", 48)
+        .attr("r", 46)
         .attr("class", "radar-beacon")
         .attr("stroke", status === 'correct' ? '#2ecc71' : '#f39c12');
 
-      // 2. Vloeiend geel oplichten van de rivier of het waterlichaam
-      const pathEl = d3.select(`#path-water-${water.id}`);
+      // 2. Oplichten van specifiek waterlichaam of gebied
+      const pathEl = d3.select(`#path-item-${item.id}`);
       if (!pathEl.empty()) {
         pathEl.classed("highlight-flowing-river", true);
       }
 
-      if (water.id === 15) {
-        d3.select("#area-ijsselmeer").classed("highlight-flowing-river", true);
-      } else if (water.id === 4) {
-        d3.select("#area-waddenzee").classed("highlight-flowing-river", true);
+      const areaEl = d3.select(`#area-${item.id}`);
+      if (!areaEl.empty()) {
+        areaEl.classed("highlight-flowing-river", true);
+      }
+
+      if (currentModuleId === 'wateren') {
+        if (item.id === 15) d3.select("#area-ijsselmeer").classed("highlight-flowing-river", true);
+        if (item.id === 4) d3.select("#area-waddenzee").classed("highlight-flowing-river", true);
       }
 
       // 3. Markeer de Pin
-      const pin = d3.select(`#pin-group-${water.id}`);
+      const pin = d3.select(`#pin-group-${item.id}`);
       if (!pin.empty()) {
         pin.classed(status === 'correct' ? 'answered-correct' : 'active-target', true);
       }
@@ -1191,7 +2144,7 @@
       // 4. Bouncende pijl
       if (showArrow) {
         const arrowWrapper = layer.append("g")
-          .attr("transform", `translate(${px}, ${py - 32})`);
+          .attr("transform", `translate(${px}, ${py - 30})`);
 
         const arrowGroup = arrowWrapper.append("g")
           .attr("class", "jumping-arrow");
@@ -1222,7 +2175,7 @@
     }
 
     /* ==========================================================================
-       7. SPELMODI LOGICA (VERKENNEN, AANWIJZEN, SPELLEN)
+       8. SPELMODI LOGICA (VERKENNEN, AANWIJZEN, SPELLEN)
        ========================================================================== */
     function setMode(mode) {
       currentMode = mode;
@@ -1264,49 +2217,63 @@
 
     /* ---------------- MODUS 1: OEFENEN & VERKENNEN ---------------- */
     function startExploreMode() {
-      selectedWater = null;
-      targetWater = null;
+      selectedItem = null;
+      targetItem = null;
       highlightZone(null);
 
+      const mod = getCurrentModule();
       document.getElementById('badgeIcon').textContent = "🔍";
       document.getElementById('badgeTitle').textContent = "Oefenen & Verkennen";
-      document.getElementById('badgeSubtitle').textContent = "Tik op een nummer op de kaart";
+      document.getElementById('badgeSubtitle').textContent = "Tik op een nummer of symbool op de kaart";
 
-      document.getElementById('questionPrompt').textContent = "Klik op een water op de kaart om de naam te horen!";
-      document.getElementById('questionSubtext').textContent = "Je leert waar het ligt, het Romeinse cijfer en de juiste spelling.";
+      if (currentModuleId === 'groningen') {
+        document.getElementById('questionPrompt').textContent = "Klik op een stad, gebied of water om de uitspraak en info te ontdekken!";
+        document.getElementById('questionSubtext').textContent = "14 steden (1-14), 4 gebieden (a-d) en 4 wateren (I-IV) van Groningen.";
+      } else {
+        document.getElementById('questionPrompt').textContent = "Klik op een water op de kaart om de naam te horen!";
+        document.getElementById('questionSubtext').textContent = "Alle 17 wateren uit de leskaart zijn genummerd met Romeinse cijfers (I t/m XVII).";
+      }
 
       document.getElementById('feedbackIcon').textContent = "💡";
-      document.getElementById('feedbackText').textContent = "Tip: Je kunt inzoomen met de knoppen rechtsboven om de rivieren van dichtbij te bekijken.";
+      document.getElementById('feedbackText').textContent = "Tip: Gebruik de zoomknoppen rechtsboven om details op de kaart van dichtbij te bekijken.";
 
       updateStatsDisplay();
     }
 
-    function exploreWater(water) {
-      selectedWater = water;
-      exploredSet.add(water.id);
+    function exploreItem(item) {
+      selectedItem = item;
+      const prog = getCurrentProgress();
+      prog.explored.add(item.id);
       playSound('tap');
 
-      highlightZone(water, 'active', true);
+      highlightZone(item, 'active', true);
 
-      document.getElementById('badgeIcon').textContent = "🌊";
-      document.getElementById('badgeTitle').textContent = `Nummer ${water.roman}`;
-      document.getElementById('badgeSubtitle').textContent = `${water.article.toUpperCase()} ${water.type.toUpperCase()}`;
+      let icon = "📍";
+      if (item.category === 'hoofdstad') icon = "👑";
+      else if (item.category === 'stad') icon = "🏘️";
+      else if (item.category === 'gebied') icon = "🌳";
+      else if (item.category === 'water') icon = "🌊";
 
-      document.getElementById('questionPrompt').innerHTML = `<span class="text-sky-600 font-bold">${water.article}</span> <span class="text-sky-950 font-black text-xl sm:text-2xl">${water.name}</span>`;
-      document.getElementById('questionSubtext').textContent = water.desc;
+      document.getElementById('badgeIcon').textContent = icon;
+      document.getElementById('badgeTitle').textContent = `${item.categoryLabel} ${item.code}`;
+      document.getElementById('badgeSubtitle').textContent = `${(item.article || '').toUpperCase()} ${(item.type || item.categoryLabel).toUpperCase()}`;
+
+      document.getElementById('questionPrompt').innerHTML = `<span class="text-sky-600 font-bold">${item.article || ''}</span> <span class="text-sky-950 font-black text-xl sm:text-2xl">${item.name}</span>`;
+      document.getElementById('questionSubtext').textContent = item.desc;
 
       document.getElementById('feedbackIcon').textContent = "ℹ️";
-      document.getElementById('feedbackText').innerHTML = `Romeins cijfer <strong>${water.roman}</strong> = <strong>${water.name}</strong> (${water.desc})`;
+      document.getElementById('feedbackText').innerHTML = `Symbool <strong>${item.code}</strong> = <strong>${item.name}</strong> (${item.desc})`;
 
       updateStatsDisplay();
-      speakDutch(`${water.article} ${water.name}`);
+      speakDutch(item.pronounce || `${item.article || ''} ${item.name}`);
     }
 
     /* ---------------- MODUS 2: AANWIJZEN ---------------- */
     function startLocateMode() {
-      selectedWater = null;
-      quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
-      locateCompletedSet.clear();
+      selectedItem = null;
+      quizQueue = [...getCurrentItems()].sort(() => Math.random() - 0.5);
+      const prog = getCurrentProgress();
+      prog.locate.clear();
       totalCorrectAnswers = 0;
       totalMistakes = 0;
 
@@ -1315,7 +2282,7 @@
 
       document.getElementById('badgeIcon').textContent = "🎯";
       document.getElementById('badgeTitle').textContent = "Aanwijzen";
-      document.getElementById('badgeSubtitle').textContent = "Zoek het juiste nummer op de kaart";
+      document.getElementById('badgeSubtitle').textContent = "Zoek het juiste symbool op de kaart";
 
       nextLocateQuestion();
     }
@@ -1326,55 +2293,61 @@
         return;
       }
 
-      targetWater = quizQueue[0];
+      targetItem = quizQueue[0];
 
       d3.selectAll(".map-pin").classed("correct-flash answered-correct active-target wrong-shake", false);
       highlightZone(null);
 
-      const promptHtml = `Waar ligt <span class="text-sky-600 font-black">${targetWater.article}</span> <span class="text-sky-950 font-black text-xl sm:text-2xl">${targetWater.name}</span>?`;
+      let questionLead = "Waar ligt";
+      if (targetItem.category === 'hoofdstad') questionLead = "Waar ligt de hoofdstad";
+      else if (targetItem.category === 'stad') questionLead = "Waar ligt de stad";
+      else if (targetItem.category === 'gebied') questionLead = "Waar ligt het gebied";
+      else if (targetItem.category === 'water') questionLead = "Waar ligt het water";
+
+      const promptHtml = `${questionLead} <span class="text-sky-950 font-black text-xl sm:text-2xl">${targetItem.name}</span>?`;
       document.getElementById('questionPrompt').innerHTML = promptHtml;
-      document.getElementById('questionSubtext').textContent = "Kies uit alle 17 Romeinse cijfers op de kaart.";
+      document.getElementById('questionSubtext').textContent = "Klik op de juiste pin op de kaart.";
 
       document.getElementById('feedbackIcon').textContent = "🎯";
-      document.getElementById('feedbackText').innerHTML = `Zoek <strong>${targetWater.article} ${targetWater.name}</strong> en klik op de juiste pin.`;
+      document.getElementById('feedbackText').innerHTML = `Zoek <strong>${targetItem.name}</strong> en klik op de juiste pin op de kaart.`;
 
       updateStatsDisplay();
 
-      await speakDutch(`Waar ligt ${targetWater.article} ${targetWater.name}?`);
+      await speakDutch(`${questionLead} ${targetItem.name}?`);
     }
 
-    async function handleLocateAttempt(clickedWater) {
-      if (!targetWater || isProcessingAnswer) return;
+    async function handleLocateAttempt(clickedItem) {
+      if (!targetItem || isProcessingAnswer) return;
 
       const card = document.getElementById('cardInteractive');
-      const clickedPin = d3.select(`#pin-group-${clickedWater.id}`);
+      const clickedPin = d3.select(`#pin-group-${clickedItem.id}`);
+      const prog = getCurrentProgress();
 
-      if (clickedWater.id === targetWater.id) {
+      if (clickedItem.id === targetItem.id) {
         isProcessingAnswer = true;
         totalCorrectAnswers++;
-        currentStreak++;
-        scoreStars += 10;
-        locateCompletedSet.add(clickedWater.id);
+        prog.currentStreak++;
+        prog.scoreStars += 10;
+        prog.locate.add(clickedItem.id);
         playSound('correct');
 
         clickedPin.classed('correct-flash', true);
-        highlightZone(clickedWater, 'correct', false);
+        highlightZone(clickedItem, 'correct', false);
 
         document.getElementById('feedbackIcon').textContent = "🎉";
-        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Goed zo!</span> Dat is inderdaad ${targetWater.article} <strong>${targetWater.name}</strong> (${targetWater.roman})!`;
+        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Goed zo!</span> Dat is inderdaad <strong>${targetItem.name}</strong> (${targetItem.code})!`;
 
         updateStatsDisplay();
 
-        await speakDutch(`Goed zo! Dat is ${targetWater.article} ${targetWater.name}`);
+        await speakDutch(`Goed zo! Dat is ${targetItem.name}`);
         await new Promise(r => setTimeout(r, 600));
 
         quizQueue.shift();
         isProcessingAnswer = false;
-        
         nextLocateQuestion();
       } else {
         totalMistakes++;
-        currentStreak = 0;
+        prog.currentStreak = 0;
         playSound('wrong');
 
         clickedPin.classed('wrong-shake', true);
@@ -1385,27 +2358,27 @@
         card.classList.add('shake-animation');
 
         document.getElementById('feedbackIcon').textContent = "❌";
-        document.getElementById('feedbackText').innerHTML = `<span class="text-rose-600 font-black">Nee, helaas!</span> Nummer <strong>${clickedWater.roman}</strong> is ${clickedWater.article} <strong>${clickedWater.name}</strong>.<br><span class="text-sky-800 font-bold">Probeer het nog eens: Waar ligt ${targetWater.article} <strong class="text-amber-800">${targetWater.name}</strong>?</span>`;
+        document.getElementById('feedbackText').innerHTML = `<span class="text-rose-600 font-black">Nee, helaas!</span> Nummer <strong>${clickedItem.code}</strong> is <strong>${clickedItem.name}</strong>.<br><span class="text-sky-800 font-bold">Probeer het nog eens: Waar ligt <strong class="text-amber-800">${targetItem.name}</strong>?</span>`;
 
         updateStatsDisplay();
 
-        await speakDutch(`Nee, dat was nummer ${clickedWater.roman}. Probeer het nog eens! Waar ligt ${targetWater.article} ${targetWater.name}?`);
-        
+        await speakDutch(`Nee, dat was ${clickedItem.name}. Waar ligt ${targetItem.name}?`);
         isProcessingAnswer = false;
       }
     }
 
-    /* ---------------- MODUS 3: TOPO SPELLING KAMPIOEN ---------------- */
+    /* ---------------- MODUS 3: SPELLING KAMPIOEN ---------------- */
     function startSpellingMode() {
-      selectedWater = null;
-      quizQueue = [...WATERS_DATA].sort(() => Math.random() - 0.5);
-      spellCompletedSet.clear();
+      selectedItem = null;
+      quizQueue = [...getCurrentItems()].sort(() => Math.random() - 0.5);
+      const prog = getCurrentProgress();
+      prog.spell.clear();
       totalCorrectAnswers = 0;
       totalMistakes = 0;
 
       document.getElementById('badgeIcon').textContent = "✏️";
       document.getElementById('badgeTitle').textContent = "Spelling Kampioen";
-      document.getElementById('badgeSubtitle').textContent = "Hoe spel je het aangegeven water?";
+      document.getElementById('badgeSubtitle').textContent = "Hoe spel je de aangegeven locatie?";
 
       nextSpellingQuestion();
     }
@@ -1416,20 +2389,20 @@
         return;
       }
 
-      targetWater = quizQueue[0];
-      highlightZone(targetWater, 'active', true);
+      targetItem = quizQueue[0];
+      highlightZone(targetItem, 'active', true);
 
-      document.getElementById('spellTargetRomanBadge').textContent = `Nummer ${targetWater.roman}`;
-      document.getElementById('questionPrompt').innerHTML = `Hoe spel je <span class="text-sky-600 font-black">Nummer ${targetWater.roman}</span>?`;
+      document.getElementById('spellTargetRomanBadge').textContent = `${targetItem.categoryLabel} ${targetItem.code}`;
+      document.getElementById('questionPrompt').innerHTML = `Hoe spel je <span class="text-sky-600 font-black">${targetItem.categoryLabel} ${targetItem.code}</span>?`;
       document.getElementById('questionSubtext').textContent = "Kijk naar de gemarkeerde zone op de kaart.";
 
       document.getElementById('feedbackIcon').textContent = "💡";
-      document.getElementById('feedbackText').textContent = "Vul de letters in met de tegels of typ ze zelf via het toetsenbord.";
+      document.getElementById('feedbackText').textContent = "Vul de letters in met de tegels of typ ze zelf in via het toetsenbord.";
 
       initSpellingSlots();
       updateStatsDisplay();
 
-      await speakDutch("Hoe spel je het aangegeven water?");
+      await speakDutch(`Hoe spel je ${targetItem.categoryLabel.toLowerCase()} nummer ${targetItem.code}?`);
     }
 
     function setSpellSubmode(submode) {
@@ -1458,7 +2431,7 @@
     }
 
     function initSpellingSlots() {
-      const target = targetWater.name;
+      const target = targetItem.spellTarget || targetItem.name;
       spellingUserLetters = [];
 
       for (let i = 0; i < target.length; i++) {
@@ -1490,7 +2463,7 @@
     function renderSpellingSlots() {
       const container = document.getElementById('letterSlotsContainer');
       container.innerHTML = '';
-      const target = targetWater.name;
+      const target = targetItem.spellTarget || targetItem.name;
 
       let filledCount = 0;
       let totalCharCount = 0;
@@ -1545,7 +2518,7 @@
       if (isProcessingAnswer || tile.used) return;
       playSound('tap');
 
-      const target = targetWater.name;
+      const target = targetItem.spellTarget || targetItem.name;
       let targetIdx = -1;
 
       for (let i = 0; i < target.length; i++) {
@@ -1563,11 +2536,10 @@
 
         renderSpellingSlots();
         renderLetterTilesBank();
-
         checkSpellingCompletion();
       } else {
         totalMistakes++;
-        currentStreak = 0;
+        getCurrentProgress().currentStreak = 0;
         playSound('wrong');
         const card = document.getElementById('cardInteractive');
         card.classList.remove('shake-animation');
@@ -1584,7 +2556,7 @@
       if (isProcessingAnswer) return;
       playSound('tap');
 
-      const target = targetWater.name;
+      const target = targetItem.spellTarget || targetItem.name;
       let lastIdx = -1;
 
       for (let i = target.length - 1; i >= 0; i--) {
@@ -1615,7 +2587,7 @@
 
     spellInputEl.addEventListener('input', (e) => {
       const val = e.target.value.replace(/[^a-zA-Z\- ]/g, '');
-      const target = targetWater.name;
+      const target = targetItem.spellTarget || targetItem.name;
       
       let letterPointer = 0;
       for (let i = 0; i < target.length; i++) {
@@ -1630,7 +2602,7 @@
     });
 
     async function checkTypedSpelling() {
-      if (currentMode !== 'spell' || !targetWater || isProcessingAnswer) return;
+      if (currentMode !== 'spell' || !targetItem || isProcessingAnswer) return;
       const inputEl = document.getElementById('spellTextInput');
       const text = (inputEl.value || "").trim().toLowerCase();
 
@@ -1642,15 +2614,19 @@
       }
 
       const cleanUser = text.replace(/[^a-z]/g, '');
-      const cleanTarget = targetWater.name.toLowerCase().replace(/[^a-z]/g, '');
+      const targetWord = targetItem.spellTarget || targetItem.name;
+      const cleanTarget = targetWord.toLowerCase().replace(/[^a-z]/g, '');
 
-      if (cleanUser === cleanTarget) {
-        spellingUserLetters = targetWater.name.split('');
+      // Vergelijk ook met alternatieve schrijfwijzen indien aanwezig
+      const altTarget = (targetItem.altSpell || targetItem.name).toLowerCase().replace(/[^a-z]/g, '');
+
+      if (cleanUser === cleanTarget || cleanUser === altTarget) {
+        spellingUserLetters = targetWord.split('');
         renderSpellingSlots();
         checkSpellingCompletion(true);
       } else {
         totalMistakes++;
-        currentStreak = 0;
+        getCurrentProgress().currentStreak = 0;
         playSound('wrong');
 
         const card = document.getElementById('cardInteractive');
@@ -1668,23 +2644,24 @@
     }
 
     async function checkSpellingCompletion(wasTyped = false) {
-      const target = targetWater.name;
-      if (spellingUserLetters.join('') === target) {
+      const target = targetItem.spellTarget || targetItem.name;
+      if (spellingUserLetters.join('').toLowerCase() === target.toLowerCase()) {
         isProcessingAnswer = true;
         totalCorrectAnswers++;
-        currentStreak++;
-        scoreStars += wasTyped ? 30 : 25;
-        spellCompletedSet.add(targetWater.id);
+        const prog = getCurrentProgress();
+        prog.currentStreak++;
+        prog.scoreStars += wasTyped ? 30 : 25;
+        prog.spell.add(targetItem.id);
 
         playSound('correct');
         triggerConfetti();
 
         document.getElementById('feedbackIcon').textContent = "🎉";
-        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Helemaal juist gespeld!</span> Het is inderdaad <strong>${targetWater.name}</strong>!`;
+        document.getElementById('feedbackText').innerHTML = `<span class="text-emerald-600 font-black">Helemaal juist gespeld!</span> Het is inderdaad <strong>${targetItem.name}</strong>!`;
 
         updateStatsDisplay();
 
-        await speakDutch(`Helemaal juist! ${targetWater.name}`);
+        await speakDutch(`Helemaal juist! ${targetItem.name}`);
         await new Promise(r => setTimeout(r, 600));
 
         quizQueue.shift();
@@ -1697,13 +2674,13 @@
       unlockAudio();
       playSound('tap');
 
-      if (currentMode === 'locate' && targetWater) {
-        highlightZone(targetWater, 'active', true);
+      if (currentMode === 'locate' && targetItem) {
+        highlightZone(targetItem, 'active', true);
         document.getElementById('feedbackIcon').textContent = "💡";
-        document.getElementById('feedbackText').innerHTML = `Hint: <strong>${targetWater.name}</strong> ligt bij de pulserende cirkel!`;
-      } else if (currentMode === 'spell' && targetWater) {
-        highlightZone(targetWater, 'active', true);
-        const target = targetWater.name;
+        document.getElementById('feedbackText').innerHTML = `Hint: <strong>${targetItem.name}</strong> ligt bij de pulserende cirkel!`;
+      } else if (currentMode === 'spell' && targetItem) {
+        highlightZone(targetItem, 'active', true);
+        const target = targetItem.spellTarget || targetItem.name;
         for (let i = 0; i < target.length; i++) {
           if (target[i] !== '-' && target[i] !== ' ' && !spellingUserLetters[i]) {
             const nextChar = target[i];
@@ -1718,53 +2695,64 @@
             break;
           }
         }
-      } else if (selectedWater) {
-        highlightZone(selectedWater, 'active', true);
+      } else if (selectedItem) {
+        highlightZone(selectedItem, 'active', true);
       }
     }
 
     /* ==========================================================================
-       8. STATISTIEKEN & OVERZICHTSLIJST
+       9. STATISTIEKEN & OVERZICHTSLIJST
        ========================================================================== */
     function updateStatsDisplay() {
-      document.getElementById('statStars').textContent = scoreStars;
-      document.getElementById('statStreak').textContent = currentStreak;
+      const prog = getCurrentProgress();
+      const mod = getCurrentModule();
+      const totalCount = mod.items.length;
+
+      document.getElementById('statStars').textContent = prog.scoreStars;
+      document.getElementById('statStreak').textContent = prog.currentStreak;
 
       let progressRatio = 0;
-      let progressLabel = "0 / 17";
+      let progressLabel = `0 / ${totalCount}`;
 
       if (currentMode === 'explore') {
-        progressRatio = (exploredSet.size / 17);
-        progressLabel = `${exploredSet.size} / 17`;
-        document.getElementById('learnedCounter').textContent = `${exploredSet.size}/17 bekeken`;
+        progressRatio = (prog.explored.size / totalCount);
+        progressLabel = `${prog.explored.size} / ${totalCount}`;
+        document.getElementById('learnedCounter').textContent = `${prog.explored.size}/${totalCount} bekeken`;
       } else if (currentMode === 'locate') {
-        progressRatio = (locateCompletedSet.size / 17);
-        progressLabel = `${locateCompletedSet.size} / 17`;
-        document.getElementById('learnedCounter').textContent = `${locateCompletedSet.size}/17 gevonden`;
+        progressRatio = (prog.locate.size / totalCount);
+        progressLabel = `${prog.locate.size} / ${totalCount}`;
+        document.getElementById('learnedCounter').textContent = `${prog.locate.size}/${totalCount} gevonden`;
       } else if (currentMode === 'spell') {
-        progressRatio = (spellCompletedSet.size / 17);
-        progressLabel = `${spellCompletedSet.size} / 17`;
-        document.getElementById('learnedCounter').textContent = `${spellCompletedSet.size}/17 gespeld`;
+        progressRatio = (prog.spell.size / totalCount);
+        progressLabel = `${prog.spell.size} / ${totalCount}`;
+        document.getElementById('learnedCounter').textContent = `${prog.spell.size}/${totalCount} gespeld`;
       }
 
       document.getElementById('topProgressBar').style.width = `${Math.min(100, Math.round(progressRatio * 100))}%`;
       document.getElementById('topProgressText').textContent = progressLabel;
 
-      renderWaterList();
+      renderItemList();
     }
 
-    function renderWaterList() {
+    function renderItemList() {
       const container = document.getElementById('waterListScroll');
       container.innerHTML = '';
       const titleEl = document.getElementById('waterListTitle');
+      const mod = getCurrentModule();
+      const prog = getCurrentProgress();
+
+      let items = mod.items;
+      if (mod.hasCategories && currentFilterCategory !== 'all') {
+        items = items.filter(x => x.category === currentFilterCategory);
+      }
 
       /* MODUS 1: OEFENEN & VERKENNEN */
       if (currentMode === 'explore') {
-        if (titleEl) titleEl.textContent = "Studielijst (17 Wateren)";
+        if (titleEl) titleEl.textContent = `Studielijst (${mod.items.length} ${mod.unitName})`;
 
-        WATERS_DATA.forEach(w => {
-          const isExplored = exploredSet.has(w.id);
-          const isSelected = selectedWater && selectedWater.id === w.id;
+        items.forEach(item => {
+          const isExplored = prog.explored.has(item.id);
+          const isSelected = selectedItem && selectedItem.id === item.id;
 
           const row = document.createElement('div');
           row.className = `flex items-center justify-between p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
@@ -1775,13 +2763,18 @@
                 : 'bg-white border-slate-100 text-slate-600 hover:bg-sky-50'
           }`;
 
-          row.onclick = () => onSelectWater(w);
+          row.onclick = () => onSelectItem(item);
+
+          let badgeColorClass = "bg-sky-100 border-sky-300 text-sky-950";
+          if (item.category === 'hoofdstad') badgeColorClass = "bg-red-100 border-red-300 text-red-950 font-black";
+          else if (item.category === 'stad') badgeColorClass = "bg-rose-50 border-rose-200 text-rose-900";
+          else if (item.category === 'gebied') badgeColorClass = "bg-lime-50 border-lime-300 text-lime-900";
 
           row.innerHTML = `
             <div class="flex items-center gap-2">
-              <span class="w-6 h-5 rounded-md bg-white border border-sky-300 text-sky-950 flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
-              <span class="font-extrabold text-sky-950">${w.name}</span>
-              <span class="text-[10px] text-slate-400 font-medium">(${w.article} ${w.type})</span>
+              <span class="w-6 h-5 rounded-md ${badgeColorClass} border flex items-center justify-center font-black text-[10px] shadow-sm">${item.code}</span>
+              <span class="font-extrabold text-sky-950">${item.name}</span>
+              <span class="text-[10px] text-slate-400 font-medium">(${item.categoryLabel || item.type})</span>
             </div>
             <span class="text-xs font-extrabold text-emerald-600">${isExplored ? '✓' : ''}</span>
           `;
@@ -1793,12 +2786,12 @@
 
       /* MODUS 2: AANWIJZEN */
       if (currentMode === 'locate') {
-        if (titleEl) titleEl.textContent = "Toets Voortgang (Aanwijzen)";
+        if (titleEl) titleEl.textContent = `Toets Voortgang (Aanwijzen)`;
 
-        const totalWaters = WATERS_DATA.length;
-        const completedCount = locateCompletedSet.size;
+        const totalItems = mod.items.length;
+        const completedCount = prog.locate.size;
 
-        for (let i = 1; i <= totalWaters; i++) {
+        for (let i = 1; i <= totalItems; i++) {
           const row = document.createElement('div');
           
           if (i <= completedCount) {
@@ -1806,18 +2799,18 @@
             row.innerHTML = `
               <div class="flex items-center gap-2">
                 <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black">✓</span>
-                <span>Water ${i} van ${totalWaters}</span>
+                <span>${mod.unitLabelSingular} ${i} van ${totalItems}</span>
               </div>
-              <span class="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md font-black">Juist aangewezen ⭐</span>
+              <span class="text-[10px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md font-black">Juist ⭐</span>
             `;
           } else if (i === completedCount + 1) {
             row.className = "flex items-center justify-between p-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 font-black text-xs animate-pulse";
             row.innerHTML = `
               <div class="flex items-center gap-2">
                 <span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-black">🎯</span>
-                <span>Huidige vraag (${i}/${totalWaters})</span>
+                <span>Vraag ${i}/${totalItems}</span>
               </div>
-              <span class="text-[10px] text-amber-800 font-bold">Kies de pin op de kaart</span>
+              <span class="text-[10px] text-amber-800 font-bold">Kies op de kaart</span>
             `;
           } else {
             row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-semibold text-xs";
@@ -1837,11 +2830,11 @@
 
       /* MODUS 3: SPELLEN */
       if (currentMode === 'spell') {
-        if (titleEl) titleEl.textContent = "Spelling Voortgang (17 Wateren)";
+        if (titleEl) titleEl.textContent = `Spelling Voortgang (${mod.items.length} ${mod.unitName})`;
 
-        WATERS_DATA.forEach(w => {
-          const isCompleted = spellCompletedSet.has(w.id);
-          const isCurrentTarget = targetWater && targetWater.id === w.id;
+        items.forEach(item => {
+          const isCompleted = prog.spell.has(item.id);
+          const isCurrentTarget = targetItem && targetItem.id === item.id;
 
           const row = document.createElement('div');
 
@@ -1849,8 +2842,8 @@
             row.className = "flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs";
             row.innerHTML = `
               <div class="flex items-center gap-2">
-                <span class="w-6 h-5 rounded-md bg-emerald-500 text-white flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
-                <span>Nummer ${w.roman}</span>
+                <span class="w-6 h-5 rounded-md bg-emerald-500 text-white flex items-center justify-center font-black text-[10px] shadow-sm">${item.code}</span>
+                <span>${item.name}</span>
               </div>
               <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-lg text-[10px] font-black">⭐ Goed gespeld!</span>
             `;
@@ -1858,8 +2851,8 @@
             row.className = "flex items-center justify-between p-2 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 font-black text-xs animate-pulse shadow-sm";
             row.innerHTML = `
               <div class="flex items-center gap-2">
-                <span class="w-6 h-5 rounded-md bg-amber-400 text-amber-950 flex items-center justify-center font-black text-[10px] shadow-sm">${w.roman}</span>
-                <span>Nummer ${w.roman} (zie kaart)</span>
+                <span class="w-6 h-5 rounded-md bg-amber-400 text-amber-950 flex items-center justify-center font-black text-[10px] shadow-sm">${item.code}</span>
+                <span>Nummer ${item.code} (zie kaart)</span>
               </div>
               <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-lg text-[10px] font-bold">✏️ Nu spellen...</span>
             `;
@@ -1867,10 +2860,10 @@
             row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 font-medium text-xs";
             row.innerHTML = `
               <div class="flex items-center gap-2">
-                <span class="w-6 h-5 rounded-md bg-white border border-slate-200 text-slate-400 flex items-center justify-center font-bold text-[10px]">${w.roman}</span>
-                <span>Nummer ${w.roman}</span>
+                <span class="w-6 h-5 rounded-md bg-white border border-slate-200 text-slate-400 flex items-center justify-center font-bold text-[10px]">${item.code}</span>
+                <span>${item.name}</span>
               </div>
-              <span class="text-[10px] font-bold text-slate-400">🔒 Nog niet geweest</span>
+              <span class="text-[10px] font-bold text-slate-400">🔒 Nog niet</span>
             `;
           }
 
@@ -1882,45 +2875,55 @@
     function speakCurrentContext() {
       unlockAudio();
       if (currentMode === 'explore') {
-        if (selectedWater) {
-          speakDutch(`${selectedWater.article} ${selectedWater.name}`);
+        if (selectedItem) {
+          speakDutch(selectedItem.pronounce || `${selectedItem.article || ''} ${selectedItem.name}`);
         } else {
-          speakDutch("Klik op een nummer op de kaart.");
+          speakDutch("Klik op een nummer of symbool op de kaart.");
         }
       } else if (currentMode === 'locate') {
-        if (targetWater) {
-          speakDutch(`Waar ligt ${targetWater.article} ${targetWater.name}?`);
+        if (targetItem) {
+          speakDutch(`Waar ligt ${targetItem.name}?`);
         }
       } else if (currentMode === 'spell') {
-        speakDutch("Hoe spel je het aangegeven water?");
+        if (targetItem) {
+          speakDutch(`Hoe spel je ${targetItem.categoryLabel.toLowerCase()} nummer ${targetItem.code}?`);
+        }
       }
     }
 
     /* ==========================================================================
-       9. INTERACTIE SELECTIE HANDLER (PINS, ZONES & OVERZICHT)
+       10. INTERACTIE SELECTIE HANDLER (PINS, ZONES & OVERZICHT)
        ========================================================================== */
-    function onSelectWater(water) {
-      if (!water) return;
+    function onSelectItem(item) {
+      if (!item) return;
       unlockAudio();
       if (currentMode === 'explore') {
-        exploreWater(water);
+        exploreItem(item);
       } else if (currentMode === 'locate') {
-        handleLocateAttempt(water);
+        handleLocateAttempt(item);
       } else if (currentMode === 'spell') {
-        if (targetWater && water.id === targetWater.id) {
-          highlightZone(targetWater, 'active', true);
+        if (targetItem && item.id === targetItem.id) {
+          highlightZone(targetItem, 'active', true);
           speakCurrentContext();
-        } else if (targetWater) {
+        } else if (targetItem) {
           playSound('tap');
-          highlightZone(water, 'active', false);
+          highlightZone(item, 'active', false);
           document.getElementById('feedbackIcon').textContent = "✏️";
-          document.getElementById('feedbackText').innerHTML = `Dat is nummer <strong>${water.roman}</strong>. Spel nu eerst het gevraagde water bij nummer <strong>${targetWater.roman}</strong>!`;
+          document.getElementById('feedbackText').innerHTML = `Dat is nummer <strong>${item.code}</strong>. Spel nu eerst <strong>${targetItem.categoryLabel} ${targetItem.code}</strong>!`;
         }
       }
     }
 
+    // Achterwaartse compatibiliteit voor eerdere functieaanroepen
+    function onSelectWater(w) {
+      onSelectItem(w);
+    }
+    function renderWaterList() {
+      renderItemList();
+    }
+
     /* ==========================================================================
-       10. CONFETTI & OVERWINNINGSSCHERM
+       11. CONFETTI & OVERWINNINGSSCHERM
        ========================================================================== */
     function triggerConfetti() {
       const canvas = document.getElementById('confettiCanvas');
@@ -1988,7 +2991,10 @@
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
-      document.getElementById('victoryStars').textContent = `⭐ ${scoreStars}`;
+      const prog = getCurrentProgress();
+      const mod = getCurrentModule();
+
+      document.getElementById('victoryStars').textContent = `⭐ ${prog.scoreStars}`;
       const totalAttempts = totalCorrectAnswers + totalMistakes;
       const accuracy = totalAttempts > 0 
         ? Math.min(100, Math.max(0, Math.round((totalCorrectAnswers / totalAttempts) * 100))) 
@@ -1998,15 +3004,15 @@
       const subtitleEl = document.getElementById('victorySubtitle');
       if (subtitleEl) {
         if (accuracy === 100) {
-          subtitleEl.textContent = "Foutloos! Je kent alle 17 wateren van Nederland perfect uit je hoofd! 🌟";
+          subtitleEl.textContent = `Foutloos! Je kent alle ${mod.items.length} ${mod.unitName} van ${mod.shortName} perfect uit je hoofd! 🌟`;
         } else if (accuracy >= 80) {
-          subtitleEl.textContent = "Geweldig gedaan! Je kent bijna alle 17 wateren van Nederland uit je hoofd! 👏";
+          subtitleEl.textContent = `Geweldig gedaan! ${mod.victoryText} 👏`;
         } else {
-          subtitleEl.textContent = "Goed geoefend! Blijf doorspelen om voor de 100% score te gaan! 💪";
+          subtitleEl.textContent = `Goed geoefend! Blijf doorspelen om voor de 100% score te gaan! 💪`;
         }
       }
 
-      speakDutch("Gefeliciteerd! Je hebt alle zeventien wateren van Nederland voltooid!");
+      speakDutch(`Gefeliciteerd! Je hebt alle ${mod.items.length} ${mod.unitName} van ${mod.shortName} voltooid!`);
     }
 
     function closeVictoryModal() {
@@ -2016,12 +3022,23 @@
     }
 
     /* ==========================================================================
-       11. APPLICATIE STARTEN
+       12. APPLICATIE STARTEN
        ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
+      // URL parameter checken of opgeslagen module laden (standaard 'wateren')
+      const urlParam = new URLSearchParams(window.location.search).get('module');
+      let initialModule = urlParam;
+      if (!initialModule || !LESSON_MODULES[initialModule]) {
+        try {
+          initialModule = localStorage.getItem('topokids_module');
+        } catch (e) {}
+      }
+      if (!initialModule || !LESSON_MODULES[initialModule]) {
+        initialModule = 'wateren'; // Standaard Wateren van Nederland (17)
+      }
+
+      switchModule(initialModule);
       initD3Map();
-      setMode('explore');
-      updateStatsDisplay();
     });
 
     window.addEventListener('resize', () => {
