@@ -221,11 +221,14 @@
 
       <!-- Lesonderwerp / Module Wisselaar -->
       <div class="flex items-center bg-amber-50/90 p-1 rounded-2xl border-2 border-amber-200 shadow-sm gap-1">
-        <button id="btnModuleWateren" onclick="switchModule('wateren')" class="px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-sky-950 shadow-sm">
-          <span>🌊</span> <span class="hidden xs:inline">Wateren</span> <span class="text-[10px] opacity-80">(17)</span>
+        <button id="btnModuleWateren" onclick="switchModule('wateren')" class="px-2 sm:px-2.5 md:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 bg-white text-sky-950 shadow-sm">
+          <span>🌊</span> <span class="hidden sm:inline">Wateren</span> <span class="text-[10px] opacity-80">(17)</span>
         </button>
-        <button id="btnModuleGroningen" onclick="switchModule('groningen')" class="px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-amber-900 hover:text-amber-950">
-          <span>🌾</span> <span class="hidden xs:inline">Groningen</span> <span class="text-[10px] opacity-80">(22)</span>
+        <button id="btnModuleGroningen" onclick="switchModule('groningen')" class="px-2 sm:px-2.5 md:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 text-amber-900 hover:text-amber-950">
+          <span>🌾</span> <span class="hidden sm:inline">Groningen</span> <span class="text-[10px] opacity-80">(22)</span>
+        </button>
+        <button id="btnModuleFriesland" onclick="switchModule('friesland')" class="px-2 sm:px-2.5 md:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 text-amber-900 hover:text-amber-950">
+          <span>⛵</span> <span class="hidden sm:inline">Friesland</span> <span class="text-[10px] opacity-80">(22)</span>
         </button>
         <button onclick="openModuleModal()" class="px-2 sm:px-2.5 py-1.5 rounded-xl font-black text-xs transition-all text-amber-900 hover:bg-amber-100 flex items-center gap-1" title="Kies een ander onderwerp">
           <span>📚</span> <span class="hidden md:inline">Thema's</span> <span>▾</span>
@@ -294,14 +297,16 @@
         <span id="headerMapBadgeText" class="text-[11px] font-bold text-sky-700">Wateren (I-XVII)</span>
       </div>
 
-      <!-- Inset Map voor Groningen (TopTopo stijl: Nederland met Groningen oranje gemarkeerd) -->
+      <!-- Inset Map voor Provincies (TopTopo stijl: Nederland met actieve provincie oranje gemarkeerd) -->
       <div id="groningenInsetMap" class="absolute top-3 right-14 sm:right-16 z-10 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-md border-2 border-amber-300 pointer-events-none hidden flex-col items-center">
         <span class="text-[9px] font-black text-amber-900 uppercase tracking-wider mb-0.5">Locatie in NL</span>
         <svg class="w-14 h-16 sm:w-16 sm:h-20" viewBox="0 0 100 120">
           <!-- Nederland basiscontour -->
           <path d="M 30,15 L 45,10 L 65,15 L 85,15 L 88,30 L 80,45 L 88,60 L 75,80 L 80,105 L 68,115 L 62,100 L 50,85 L 30,85 L 20,80 L 30,75 L 32,55 L 22,50 L 30,40 L 40,35 L 35,25 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
           <!-- Groningen provincie in oranje gemarkeerd -->
-          <path d="M 65,15 L 85,15 L 88,30 L 75,35 L 65,30 Z" fill="#f97316" stroke="#ea580c" stroke-width="2" />
+          <path id="insetGroningen" class="hidden" d="M 65,15 L 85,15 L 88,30 L 75,35 L 65,30 Z" fill="#f97316" stroke="#ea580c" stroke-width="2" />
+          <!-- Friesland provincie in oranje gemarkeerd met Wadden eilanden -->
+          <path id="insetFriesland" class="hidden" d="M 45,14 L 65,15 L 65,30 L 58,40 L 46,36 L 42,22 Z M 34,17 L 39,15 L 39,17 Z M 41,13 L 49,12 L 49,14 Z M 52,9 L 59,10 L 59,12 Z M 62,11 L 66,12 L 65,13 Z" fill="#f97316" stroke="#ea580c" stroke-width="2" />
         </svg>
       </div>
 
@@ -515,7 +520,7 @@
 
   <!-- Lesonderwerp Kiezer Modal -->
   <div id="moduleSelectModal" class="fixed inset-0 bg-sky-950/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl border-4 border-amber-300 shadow-2xl max-w-lg w-full p-6 sm:p-7 flex flex-col gap-4 relative animate-bounce-short">
+    <div class="bg-white rounded-3xl border-4 border-amber-300 shadow-2xl max-w-4xl w-full p-5 sm:p-7 flex flex-col gap-4 relative animate-bounce-short">
       
       <!-- Sluitknop -->
       <button onclick="closeModuleModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition-all active:scale-95" title="Sluiten">
@@ -536,10 +541,10 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
         
         <!-- Kaart 1: Wateren van Nederland -->
-        <div id="moduleCard-wateren" onclick="selectModuleFromModal('wateren')" class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-sky-50/50 border-sky-300 hover:border-sky-500 hover:shadow-md">
+        <div id="moduleCard-wateren" onclick="selectModuleFromModal('wateren')" class="p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-sky-50/50 border-sky-300 hover:border-sky-500 hover:shadow-md">
           <div class="flex items-start justify-between">
             <span class="text-3xl p-2 rounded-2xl bg-white border border-sky-200 shadow-sm">🌊</span>
             <span id="moduleBadge-wateren" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-200">17 Wateren</span>
@@ -554,10 +559,7 @@
         </div>
 
         <!-- Kaart 2: Provincie Groningen -->
-        <div id="moduleCard-groningen" onclick="selectModuleFromModal('groningen')" class="p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-amber-50/50 border-amber-300 hover:border-amber-500 hover:shadow-md">
-          <div class="absolute -right-6 top-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-7 py-0.5 rotate-45 shadow-sm uppercase tracking-wider">
-            Nieuw!
-          </div>
+        <div id="moduleCard-groningen" onclick="selectModuleFromModal('groningen')" class="p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-amber-50/50 border-amber-300 hover:border-amber-500 hover:shadow-md">
           <div class="flex items-start justify-between">
             <span class="text-3xl p-2 rounded-2xl bg-white border border-amber-200 shadow-sm">🌾</span>
             <span id="moduleBadge-groningen" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">22 Locaties</span>
@@ -567,6 +569,24 @@
             <p class="text-xs text-slate-500 font-semibold mt-0.5">14 steden, 4 gebieden en 4 wateren van Groningen.</p>
           </div>
           <button class="w-full py-2 rounded-xl text-xs font-black transition-all bg-amber-500 group-hover:bg-amber-400 text-white shadow-sm flex items-center justify-center gap-1">
+            <span>Start deze les</span> <span>➔</span>
+          </button>
+        </div>
+
+        <!-- Kaart 3: Provincie Friesland -->
+        <div id="moduleCard-friesland" onclick="selectModuleFromModal('friesland')" class="p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between gap-3 group relative overflow-hidden bg-emerald-50/50 border-emerald-300 hover:border-emerald-500 hover:shadow-md">
+          <div class="absolute -right-6 top-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[9px] font-black px-7 py-0.5 rotate-45 shadow-sm uppercase tracking-wider">
+            Nieuw!
+          </div>
+          <div class="flex items-start justify-between">
+            <span class="text-3xl p-2 rounded-2xl bg-white border border-emerald-200 shadow-sm">⛵</span>
+            <span id="moduleBadge-friesland" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200">22 Locaties</span>
+          </div>
+          <div>
+            <h3 class="font-black text-sky-950 text-base group-hover:text-emerald-800 transition-colors">Provincie Friesland</h3>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">13 steden, 4 Waddeneilanden en 5 wateren van Friesland.</p>
+          </div>
+          <button class="w-full py-2 rounded-xl text-xs font-black transition-all bg-emerald-500 group-hover:bg-emerald-400 text-white shadow-sm flex items-center justify-center gap-1">
             <span>Start deze les</span> <span>➔</span>
           </button>
         </div>
@@ -965,6 +985,328 @@
       }
     ];
 
+    /* ==========================================================================
+       PROVINCIE FRIESLAND DATA (13 STEDEN + 4 GEBIEDEN + 5 WATEREN = 22 ITEMS)
+       Conform de officiële TopTopo leskaart
+       ========================================================================== */
+    const FRIESLAND_DATA = [
+      // 1 Hoofdstad (met dubbele rode cirkel op de leskaart)
+      {
+        id: 'fri-1',
+        code: '1',
+        category: 'hoofdstad',
+        categoryLabel: 'Hoofdstad',
+        name: 'Leeuwarden',
+        spellTarget: 'Leeuwarden',
+        type: 'hoofdstad',
+        lng: 5.7999,
+        lat: 53.2012,
+        article: 'de',
+        desc: 'De trotse provinciehoofdstad van Friesland, bekend om de scheve toren De Oldehove en start- en finishplaats van de Elfstedentocht.',
+        pronounce: 'Leeuwarden, hoofdstad van Friesland.'
+      },
+
+      // 2-13 Steden (rode stippen op de leskaart)
+      {
+        id: 'fri-2',
+        code: '2',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Joure',
+        spellTarget: 'Joure',
+        type: 'stad',
+        lng: 5.7958,
+        lat: 52.9667,
+        article: 'het',
+        desc: 'Gezellige Friese plaats bij het Sneekermeer, beroemd om Douwe Egberts koffie en de Friese klokkenmakerij.',
+        pronounce: 'Joure, bekend van koffie en klokken.'
+      },
+      {
+        id: 'fri-3',
+        code: '3',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Drachten',
+        spellTarget: 'Drachten',
+        type: 'stad',
+        lng: 6.0989,
+        lat: 53.1125,
+        article: 'het',
+        desc: 'De op één na grootste plaats van Friesland, gelegen in de groene streek De Friese Wouden.',
+        pronounce: 'Drachten, grote plaats in De Friese Wouden.'
+      },
+      {
+        id: 'fri-4',
+        code: '4',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Lemmer',
+        spellTarget: 'Lemmer',
+        type: 'stad',
+        lng: 5.7133,
+        lat: 52.8458,
+        article: 'het',
+        desc: 'Prachtige watersportplaats aan het IJsselmeer met het wereldberoemde Woudagemaal, UNESCO Werelderfgoed.',
+        pronounce: 'Lemmer, watersportplaats aan het IJsselmeer met het Woudagemaal.'
+      },
+      {
+        id: 'fri-5',
+        code: '5',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Franeker',
+        spellTarget: 'Franeker',
+        type: 'stad',
+        lng: 5.5414,
+        lat: 53.1878,
+        article: 'het',
+        desc: 'Historische Elfstedenstad met het oudste werkende planetarium ter wereld van Eise Eisinga en de PC kaatswedstrijd.',
+        pronounce: 'Franeker, Elfstedenstad met het wereldberoemde planetarium.'
+      },
+      {
+        id: 'fri-6',
+        code: '6',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Dokkum',
+        spellTarget: 'Dokkum',
+        type: 'stad',
+        lng: 5.9989,
+        lat: 53.3253,
+        article: 'het',
+        desc: 'Noordelijkste Elfstedenstad met schitterende historische bolwerken en de bekende Bonifatiusbron.',
+        pronounce: 'Dokkum, noordelijke Elfstedenstad met historische bolwerken.'
+      },
+      {
+        id: 'fri-7',
+        code: '7',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Wolvega',
+        spellTarget: 'Wolvega',
+        type: 'stad',
+        lng: 6.0008,
+        lat: 52.8767,
+        article: 'het',
+        desc: 'Hoofdplaats van de gemeente Weststellingwerf in het zuidoosten van Friesland, bekend om de drafsport.',
+        pronounce: 'Wolvega, plaats in het zuidoosten van Friesland.'
+      },
+      {
+        id: 'fri-8',
+        code: '8',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Harlingen',
+        spellTarget: 'Harlingen',
+        type: 'stad',
+        lng: 5.4264,
+        lat: 53.1744,
+        article: 'het',
+        desc: 'De enige zeehavenstad van Friesland aan de Waddenzee, vertrekhaven van de veerboten naar Terschelling en Vlieland.',
+        pronounce: 'Harlingen, zeehavenstad aan de Waddenzee.'
+      },
+      {
+        id: 'fri-9',
+        code: '9',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Stavoren',
+        spellTarget: 'Stavoren',
+        type: 'stad',
+        lng: 5.3589,
+        lat: 52.8867,
+        article: 'het',
+        desc: 'De oudste stad van Friesland aan het IJsselmeer, beroemd om de legende van het Vrouwtje van Stavoren.',
+        pronounce: 'Stavoren, oudste stad van Friesland aan het IJsselmeer.'
+      },
+      {
+        id: 'fri-10',
+        code: '10',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Bolsward',
+        spellTarget: 'Bolsward',
+        type: 'stad',
+        lng: 5.5267,
+        lat: 53.0617,
+        article: 'het',
+        desc: 'Mooie Elfstedenstad en Hanzestad met een prachtig stadhuis en het startpunt van de Fietselfstedentocht.',
+        pronounce: 'Bolsward, historische Hanzestad en Elfstedenstad.'
+      },
+      {
+        id: 'fri-11',
+        code: '11',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Sneek',
+        spellTarget: 'Sneek',
+        type: 'stad',
+        lng: 5.6608,
+        lat: 53.0328,
+        article: 'het',
+        desc: 'Het bruisende watersporthart van Friesland, beroemd om de monumentale Waterpoort en de Sneekweek zeilwedstrijden.',
+        pronounce: 'Sneek, watersportstad met de beroemde Waterpoort.'
+      },
+      {
+        id: 'fri-12',
+        code: '12',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Heerenveen',
+        spellTarget: 'Heerenveen',
+        type: 'stad',
+        lng: 5.9228,
+        lat: 52.9567,
+        article: 'het',
+        desc: 'Hét schaatshart van Nederland met het wereldberoemde ijsstadion Thialf en voetbalclub SC Heerenveen.',
+        pronounce: 'Heerenveen, sportstad met schaatstempel Thialf.'
+      },
+      {
+        id: 'fri-13',
+        code: '13',
+        category: 'stad',
+        categoryLabel: 'Stad',
+        name: 'Nes',
+        spellTarget: 'Nes',
+        type: 'stad',
+        lng: 5.7733,
+        lat: 53.4472,
+        article: 'het',
+        desc: 'Gezellig dorp op het waddeneiland Ameland waar de veerboot aankomt, met mooie commandeurshuizen.',
+        pronounce: 'Nes, dorp op het waddeneiland Ameland.'
+      },
+
+      // a-d Gebieden (Waddeneilanden - groene vierkanten op de leskaart)
+      {
+        id: 'fri-a',
+        code: 'a',
+        category: 'gebied',
+        categoryLabel: 'Gebied',
+        name: 'Schiermonnikoog',
+        spellTarget: 'Schiermonnikoog',
+        type: 'gebied',
+        lng: 6.1600,
+        lat: 53.4800,
+        article: 'het',
+        desc: 'Het meest oostelijke bewoonde Friese waddeneiland en Nationaal Park met de breedste zandstranden van Europa.',
+        pronounce: 'Schiermonnikoog, waddeneiland en Nationaal Park.'
+      },
+      {
+        id: 'fri-b',
+        code: 'b',
+        category: 'gebied',
+        categoryLabel: 'Gebied',
+        name: 'Ameland',
+        spellTarget: 'Ameland',
+        type: 'gebied',
+        lng: 5.7000,
+        lat: 53.4500,
+        article: 'het',
+        desc: 'Prachtig waddeneiland met vier dorpen (waaronder Nes), duinen, bossen en de rood-witte vuurtoren Bornrif.',
+        pronounce: 'Ameland, waddeneiland met vuurtoren Bornrif.'
+      },
+      {
+        id: 'fri-c',
+        code: 'c',
+        category: 'gebied',
+        categoryLabel: 'Gebied',
+        name: 'Terschelling',
+        spellTarget: 'Terschelling',
+        type: 'gebied',
+        lng: 5.3200,
+        lat: 53.3900,
+        article: 'het',
+        desc: 'Groot waddeneiland met de markante vuurtoren Brandaris, natuurgebied De Boschplaat en het Oerol festival.',
+        pronounce: 'Terschelling, waddeneiland met vuurtoren de Brandaris.'
+      },
+      {
+        id: 'fri-d',
+        code: 'd',
+        category: 'gebied',
+        categoryLabel: 'Gebied',
+        name: 'Vlieland',
+        spellTarget: 'Vlieland',
+        type: 'gebied',
+        lng: 5.0600,
+        lat: 53.2700,
+        article: 'het',
+        desc: 'Rustig, autoluw waddeneiland met het dorp Oost-Vlieland, hoge duinen en de uitgestrekte zandvlakte Vliehors.',
+        pronounce: 'Vlieland, rustig en autoluw waddeneiland.'
+      },
+
+      // I-V Wateren (blauwe waterbadges op de leskaart)
+      {
+        id: 'fri-I',
+        code: 'I',
+        category: 'water',
+        categoryLabel: 'Water',
+        name: 'Sneekermeer',
+        spellTarget: 'Sneekermeer',
+        type: 'water',
+        lng: 5.7600,
+        lat: 53.0300,
+        article: 'het',
+        desc: 'Beroemd meer tussen Sneek en Joure, het bruisende middelpunt van de Friese watersport en zeilwedstrijden.',
+        pronounce: 'Het Sneekermeer, geliefd meer bij watersporters.'
+      },
+      {
+        id: 'fri-II',
+        code: 'II',
+        category: 'water',
+        categoryLabel: 'Water',
+        name: 'Waddenzee',
+        spellTarget: 'Waddenzee',
+        type: 'water',
+        lng: 5.3300,
+        lat: 53.2000,
+        article: 'de',
+        desc: 'Unieke binnenzee tussen de Waddeneilanden en het vasteland, UNESCO Werelderfgoed met eb en vloed en droogvallende wadplaten.',
+        pronounce: 'De Waddenzee, unieke getijdenzee en Werelderfgoed.'
+      },
+      {
+        id: 'fri-III',
+        code: 'III',
+        category: 'water',
+        categoryLabel: 'Water',
+        name: 'Van Harinxmakanaal',
+        spellTarget: 'Van Harinxmakanaal',
+        type: 'water',
+        lng: 5.6000,
+        lat: 53.1750,
+        article: 'het',
+        desc: 'Belangrijk scheepvaartkanaal dat de zeehaven Harlingen via Franeker verbindt met Leeuwarden.',
+        pronounce: 'Het Van Harinxmakanaal, van Harlingen via Franeker naar Leeuwarden.'
+      },
+      {
+        id: 'fri-IV',
+        code: 'IV',
+        category: 'water',
+        categoryLabel: 'Water',
+        name: 'Prinses Margrietkanaal',
+        spellTarget: 'Prinses Margrietkanaal',
+        type: 'water',
+        lng: 5.8300,
+        lat: 53.1100,
+        article: 'het',
+        desc: 'De belangrijkste vaarweg door Friesland voor grote binnenvaartschepen, van Lemmer naar Groningen.',
+        pronounce: 'Het Prinses Margrietkanaal, belangrijke scheepvaartroute door Friesland.'
+      },
+      {
+        id: 'fri-V',
+        code: 'V',
+        category: 'water',
+        categoryLabel: 'Water',
+        name: 'Lauwersmeer',
+        spellTarget: 'Lauwersmeer',
+        type: 'water',
+        lng: 6.1500,
+        lat: 53.3700,
+        article: 'het',
+        desc: 'Groot meer en Nationaal Park op de grens van Friesland en Groningen, ontstaan na de afsluiting van de Lauwerszee in 1969.',
+        pronounce: 'Het Lauwersmeer, prachtig natuurgebied en meer op de grens met Groningen.'
+      }
+    ];
+
     /* Moduleconfiguratie Registry */
     const LESSON_MODULES = {
       wateren: {
@@ -986,7 +1328,7 @@
         name: 'Provincie Groningen',
         shortName: 'Groningen',
         icon: '🌾',
-        badgeText: 'Topografie • Nieuw!',
+        badgeText: 'Topografie',
         subtitle: '22 locaties: 14 steden, 4 gebieden en 4 wateren',
         mapBadgeText: 'Groningen (TopTopo)',
         unitName: 'locaties',
@@ -994,6 +1336,20 @@
         items: GRONINGEN_DATA,
         hasCategories: true,
         victoryText: 'Je kent nu alle 22 steden, gebieden en wateren van Groningen uit je hoofd!'
+      },
+      friesland: {
+        id: 'friesland',
+        name: 'Provincie Friesland',
+        shortName: 'Friesland',
+        icon: '⛵',
+        badgeText: 'Topografie • Nieuw!',
+        subtitle: '22 locaties: 13 steden, 4 gebieden en 5 wateren',
+        mapBadgeText: 'Friesland (TopTopo)',
+        unitName: 'locaties',
+        unitLabelSingular: 'locatie',
+        items: FRIESLAND_DATA,
+        hasCategories: true,
+        victoryText: 'Je kent nu alle 22 steden, eilanden en wateren van Friesland uit je hoofd!'
       }
     };
 
@@ -1046,6 +1402,110 @@
         [[6.8000, 53.4400], [6.7611, 53.4222], [6.8569, 53.3217], [6.7583, 53.1611], [6.9236, 53.1067], [6.9536, 52.9906], [7.0628, 52.8767]],
         // N46: Groningen stad naar Eemshaven/Roodeschool
         [[6.5665, 53.2194], [6.6400, 53.3000], [6.7611, 53.4222]]
+      ]
+    };
+
+    /* Friesland Specifieke Geometrie (Kanalen, Meren, Zeearmen, Eilanden & Wegen) */
+    const FRIESLAND_GEOMETRIES = {
+      // 1. Van Harinxmakanaal (III)
+      vanHarinxmakanaal: [
+        [5.4264, 53.1744], // Harlingen
+        [5.4800, 53.1800],
+        [5.5414, 53.1878], // Franeker
+        [5.6450, 53.1930], // Dronryp
+        [5.7400, 53.1960],
+        [5.7999, 53.2012]  // Leeuwarden
+      ],
+
+      // 2. Prinses Margrietkanaal (IV)
+      prinsesMargrietkanaal: [
+        [5.7100, 52.8450], // Lemmer
+        [5.7050, 52.9150], // Spannenburg
+        [5.6900, 52.9550], // Koevordermeer
+        [5.7600, 53.0300], // Sneekermeer
+        [5.8350, 53.1000], // Grou
+        [5.9000, 53.1500], // Wartena
+        [6.0300, 53.1900], // Bergumermeer
+        [6.2200, 53.2380]  // Stroobos (richting Groningen)
+      ],
+
+      // 3. Sneekermeer (I)
+      sneekermeer: [
+        [5.7350, 53.0200],
+        [5.7500, 53.0450],
+        [5.7850, 53.0500],
+        [5.8050, 53.0350],
+        [5.7800, 53.0150],
+        [5.7350, 53.0200]
+      ],
+
+      // 4. Waddenzee Friese zone (II)
+      waddenzeeZone: [
+        [4.9500, 53.2000],
+        [5.1000, 53.3000],
+        [5.4000, 53.3800],
+        [5.7500, 53.4300],
+        [6.1000, 53.4500],
+        [6.2500, 53.4200],
+        [6.1500, 53.3800],
+        [5.7000, 53.3400],
+        [5.4500, 53.2600],
+        [5.3850, 53.1100],
+        [5.2000, 53.0800],
+        [4.9500, 53.2000]
+      ],
+
+      // 5. Lauwersmeer (V)
+      lauwersmeer: [
+        [6.1200, 53.3400],
+        [6.1700, 53.4000],
+        [6.2400, 53.4100],
+        [6.2500, 53.3600],
+        [6.1800, 53.3300],
+        [6.1200, 53.3400]
+      ],
+
+      // 6. Afsluitdijk
+      afsluitdijk: [
+        [5.0350, 52.9300],
+        [5.2400, 53.0400],
+        [5.3850, 53.1100]
+      ],
+
+      // 7. Wadden eilanden contouren (a-d)
+      schiermonnikoog: [
+        [6.15, 53.47], [6.26, 53.50], [6.35, 53.51], [6.28, 53.48], [6.17, 53.46], [6.15, 53.47]
+      ],
+      ameland: [
+        [5.62, 53.43], [5.75, 53.46], [5.92, 53.47], [5.85, 53.44], [5.69, 53.42], [5.62, 53.43]
+      ],
+      terschelling: [
+        [5.19, 53.36], [5.28, 53.39], [5.45, 53.44], [5.55, 53.44], [5.42, 53.39], [5.24, 53.35], [5.19, 53.36]
+      ],
+      vlieland: [
+        [4.93, 53.24], [5.02, 53.28], [5.11, 53.32], [5.08, 53.29], [4.97, 53.25], [4.93, 53.24]
+      ],
+
+      // 8. Belangrijke wegen voor oriëntatie conform de leskaart
+      roads: [
+        // A7: Afsluitdijk -> Bolsward -> Sneek -> Joure -> Heerenveen -> Drachten -> Groningen
+        [[5.3850, 53.1100], [5.5267, 53.0617], [5.6608, 53.0328], [5.7958, 52.9667], [5.9228, 52.9567], [6.0989, 53.1125], [6.2400, 53.1700]],
+        // A31: Harlingen -> Franeker -> Leeuwarden
+        [[5.4264, 53.1744], [5.5414, 53.1878], [5.7999, 53.2012]],
+        // A32: Leeuwarden -> Grou -> Heerenveen -> Wolvega -> Overijssel
+        [[5.7999, 53.2012], [5.8350, 53.1000], [5.9228, 52.9567], [6.0008, 52.8767], [6.0700, 52.8100]],
+        // N31 / N356: Leeuwarden -> Dokkum
+        [[5.7999, 53.2012], [5.9000, 53.2700], [5.9989, 53.3253]]
+      ],
+
+      // 9. Extra Friese meren als achtergrond watergeografie
+      extraLakes: [
+        // Heegermeer & Fluessen
+        [[5.4600, 52.9300], [5.5300, 52.9500], [5.5800, 52.9650], [5.5500, 52.9500], [5.4500, 52.9200], [5.4600, 52.9300]],
+        // Tjeukemeer
+        [[5.7500, 52.8800], [5.7900, 52.9100], [5.8300, 52.9000], [5.8100, 52.8700], [5.7500, 52.8800]],
+        // Slotermeer
+        [[5.6300, 52.8900], [5.6600, 52.9100], [5.6800, 52.8950], [5.6500, 52.8800], [5.6300, 52.8900]]
       ]
     };
 
@@ -1293,6 +1753,13 @@
         spell: new Set(),
         scoreStars: 0,
         currentStreak: 0
+      },
+      friesland: {
+        explored: new Set(),
+        locate: new Set(),
+        spell: new Set(),
+        scoreStars: 0,
+        currentStreak: 0
       }
     };
 
@@ -1396,6 +1863,8 @@
 
       const module = getCurrentModule();
       const isGroningen = currentModuleId === 'groningen';
+      const isFriesland = currentModuleId === 'friesland';
+      const isProvince = isGroningen || isFriesland;
 
       // 1. D3 Mercator Projectie instellen
       if (isGroningen) {
@@ -1408,6 +1877,16 @@
           }
         });
         d3Projection = d3.geoMercator().fitExtent([[40, 50], [760, 910]], groningenExtent);
+      } else if (isFriesland) {
+        // Focus en zoom nauwkeurig in op de provincie Friesland en de 4 Waddeneilanden
+        const frieslandExtent = normalizeFeature({
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [[[4.80, 52.75], [4.80, 53.56], [6.35, 53.56], [6.35, 52.75], [4.80, 52.75]]]
+          }
+        });
+        d3Projection = d3.geoMercator().fitExtent([[40, 55], [760, 905]], frieslandExtent);
       } else {
         // Volledig Nederland overzicht voor wateren
         d3Projection = d3.geoMercator().fitExtent([[30, 30], [770, 930]], cachedGeoData);
@@ -1417,14 +1896,14 @@
 
       // Noordzee achtergrond klikbaar
       d3.select("#rectNorthSea").on("click", (e) => {
-        if (!isGroningen) handleAreaClick(11, e);
+        if (!isProvince) handleAreaClick(11, e);
       });
 
       // 2. Zeeën & Meren (Waddenzee, IJsselmeer, Veluwemeer)
       const seasLayer = d3.select("#layerSeasLakes");
       seasLayer.selectAll("*").remove();
 
-      if (!isGroningen) {
+      if (!isProvince) {
         // Waddenzee (IV)
         const waddenCoords = WATER_GEOMETRIES.waddenzee.map(d3Projection);
         seasLayer.append("path")
@@ -1460,6 +1939,32 @@
           .attr("stroke-linecap", "round")
           .attr("class", "cursor-pointer transition-all")
           .on("click", (e) => handleAreaClick(13, e));
+      } else if (isFriesland) {
+        // Waddenzee Friese zone (II)
+        const waddenCoords = FRIESLAND_GEOMETRIES.waddenzeeZone.map(d3Projection);
+        seasLayer.append("path")
+          .attr("id", "area-fri-II")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(waddenCoords))
+          .attr("fill", "#60a5fa")
+          .attr("opacity", 0.45)
+          .attr("stroke", "#38bdf8")
+          .attr("stroke-width", 2)
+          .attr("class", "cursor-pointer transition-colors")
+          .on("click", () => {
+            const item = FRIESLAND_DATA.find(x => x.id === 'fri-II');
+            if (item) onSelectItem(item);
+          });
+
+        // Extra Friese achtergrondmeren (Heegermeer, Tjeukemeer, Slotermeer)
+        FRIESLAND_GEOMETRIES.extraLakes.forEach(lakeCoords => {
+          seasLayer.append("path")
+            .attr("d", d3.line().curve(d3.curveBasisClosed)(lakeCoords.map(d3Projection)))
+            .attr("fill", "#38bdf8")
+            .attr("opacity", 0.65)
+            .attr("stroke", "#0284c7")
+            .attr("stroke-width", 1.5)
+            .attr("pointer-events", "none");
+        });
       }
 
       // 3. De Provincies tekenen
@@ -1480,23 +1985,29 @@
             if (name.includes("Friesland") || name.includes("Fryslân") || name.includes("Drenthe")) return "#e2e8f0";
             return "#f1f5f9";
           }
+          if (isFriesland) {
+            // Friesland in TopTopo groen, buurprovincies in zacht neutraal
+            if (name.includes("Friesland") || name.includes("Fryslân")) return "#84cc16";
+            if (name.includes("Groningen") || name.includes("Drenthe") || name.includes("Overijssel") || name.includes("Flevoland") || name.includes("Noord-Holland")) return "#e2e8f0";
+            return "#f1f5f9";
+          }
           return PROVINCE_COLORS[name] || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
         })
-        .attr("stroke", isGroningen ? "#ffffff" : "#ffffff")
-        .attr("stroke-width", isGroningen ? 2.5 : 2.2)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", isProvince ? 2.5 : 2.2)
         .attr("stroke-linejoin", "round")
         .on("pointerenter", function(event, d) {
-          if (!isGroningen) {
+          if (!isProvince) {
             d3.select(this).attr("stroke-width", 3.8).attr("stroke", "#f1c40f");
           }
         })
         .on("pointerleave", function(event, d) {
-          if (!isGroningen) {
+          if (!isProvince) {
             d3.select(this).attr("stroke-width", 2.2).attr("stroke", "#ffffff");
           }
         });
 
-      // 4. Groningen Specifieke Gebieden (Hoge land & Westerwolde)
+      // 4. Provincie Specifieke Gebieden (Hoge land, Westerwolde of Friese Waddeneilanden)
       const regionsLayer = d3.select("#layerGroningenRegions");
       regionsLayer.selectAll("*").remove();
 
@@ -1569,14 +2080,49 @@
             const item = GRONINGEN_DATA.find(x => x.id === 'gro-b');
             if (item) onSelectItem(item);
           });
+      } else if (isFriesland) {
+        // Wadden eilanden (a t/m d) interactieve zandvlaktes
+        const islands = [
+          { id: 'fri-a', coords: FRIESLAND_GEOMETRIES.schiermonnikoog },
+          { id: 'fri-b', coords: FRIESLAND_GEOMETRIES.ameland },
+          { id: 'fri-c', coords: FRIESLAND_GEOMETRIES.terschelling },
+          { id: 'fri-d', coords: FRIESLAND_GEOMETRIES.vlieland }
+        ];
+
+        islands.forEach(isl => {
+          const islandCoords = isl.coords.map(d3Projection);
+          regionsLayer.append("path")
+            .attr("id", `area-${isl.id}`)
+            .attr("d", d3.line().curve(d3.curveBasisClosed)(islandCoords))
+            .attr("fill", "#fef08a")
+            .attr("opacity", 0.9)
+            .attr("stroke", "#ca8a04")
+            .attr("stroke-width", 2)
+            .attr("class", "cursor-pointer transition-all")
+            .on("click", () => {
+              const item = FRIESLAND_DATA.find(x => x.id === isl.id);
+              if (item) onSelectItem(item);
+            });
+        });
       }
 
-      // 5. Wegen & Transit (oriëntatielijnen voor Groningen)
+      // 5. Wegen & Transit (oriëntatielijnen)
       const transitLayer = d3.select("#layerTransit");
       transitLayer.selectAll("*").remove();
 
       if (isGroningen) {
         GRONINGEN_GEOMETRIES.roads.forEach((roadCoords, idx) => {
+          transitLayer.append("path")
+            .attr("d", d3.line().curve(d3.curveCatmullRom)(roadCoords.map(d3Projection)))
+            .attr("fill", "none")
+            .attr("stroke", idx === 0 ? "#fb923c" : "#fdba74")
+            .attr("stroke-width", idx === 0 ? 3.5 : 2.2)
+            .attr("stroke-linecap", "round")
+            .attr("opacity", 0.75)
+            .attr("pointer-events", "none");
+        });
+      } else if (isFriesland) {
+        FRIESLAND_GEOMETRIES.roads.forEach((roadCoords, idx) => {
           transitLayer.append("path")
             .attr("d", d3.line().curve(d3.curveCatmullRom)(roadCoords.map(d3Projection)))
             .attr("fill", "none")
@@ -1592,7 +2138,7 @@
       const riversLayer = d3.select("#layerRivers");
       riversLayer.selectAll("*").remove();
 
-      if (!isGroningen) {
+      if (!isProvince) {
         // Dijken
         riversLayer.append("path")
           .attr("d", d3.line()(WATER_GEOMETRIES.afsluitdijk.map(d3Projection)))
@@ -1667,11 +2213,11 @@
             .attr("class", "cursor-pointer")
             .on("click", (e) => handleAreaClick(item.id, e));
         });
-      } else {
+      } else if (isGroningen) {
         // Groningen Waterwegen:
         // Van Starkenborghkanaal (IV)
         const starkCoords = GRONINGEN_GEOMETRIES.vanStarkenborghkanaal.map(d3Projection);
-        const starkPath = riversLayer.append("path")
+        riversLayer.append("path")
           .attr("id", "path-item-gro-IV")
           .attr("d", d3.line().curve(d3.curveCatmullRom)(starkCoords))
           .attr("fill", "none")
@@ -1693,7 +2239,7 @@
 
         // Eemskanaal (III)
         const eemskanaalCoords = GRONINGEN_GEOMETRIES.eemskanaal.map(d3Projection);
-        const eemskPath = riversLayer.append("path")
+        riversLayer.append("path")
           .attr("id", "path-item-gro-III")
           .attr("d", d3.line().curve(d3.curveCatmullRom)(eemskanaalCoords))
           .attr("fill", "none")
@@ -1743,6 +2289,88 @@
             const item = GRONINGEN_DATA.find(x => x.id === 'gro-II');
             if (item) onSelectItem(item);
           });
+      } else if (isFriesland) {
+        // Friesland Waterwegen & Meren:
+        // 1. Afsluitdijk
+        riversLayer.append("path")
+          .attr("d", d3.line()(FRIESLAND_GEOMETRIES.afsluitdijk.map(d3Projection)))
+          .attr("stroke", "#334155")
+          .attr("stroke-width", 5)
+          .attr("stroke-linecap", "round");
+
+        // 2. Van Harinxmakanaal (III)
+        const harinxCoords = FRIESLAND_GEOMETRIES.vanHarinxmakanaal.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "path-item-fri-III")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(harinxCoords))
+          .attr("fill", "none")
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 7)
+          .attr("stroke-linecap", "round")
+          .attr("class", "cursor-pointer transition-all");
+
+        riversLayer.append("path")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(harinxCoords))
+          .attr("fill", "none")
+          .attr("stroke", "transparent")
+          .attr("stroke-width", 32)
+          .attr("class", "cursor-pointer")
+          .on("click", () => {
+            const item = FRIESLAND_DATA.find(x => x.id === 'fri-III');
+            if (item) onSelectItem(item);
+          });
+
+        // 3. Prinses Margrietkanaal (IV)
+        const margrietCoords = FRIESLAND_GEOMETRIES.prinsesMargrietkanaal.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "path-item-fri-IV")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(margrietCoords))
+          .attr("fill", "none")
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 7)
+          .attr("stroke-linecap", "round")
+          .attr("class", "cursor-pointer transition-all");
+
+        riversLayer.append("path")
+          .attr("d", d3.line().curve(d3.curveCatmullRom)(margrietCoords))
+          .attr("fill", "none")
+          .attr("stroke", "transparent")
+          .attr("stroke-width", 32)
+          .attr("class", "cursor-pointer")
+          .on("click", () => {
+            const item = FRIESLAND_DATA.find(x => x.id === 'fri-IV');
+            if (item) onSelectItem(item);
+          });
+
+        // 4. Sneekermeer (I)
+        const sneekerCoords = FRIESLAND_GEOMETRIES.sneekermeer.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "area-fri-I")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(sneekerCoords))
+          .attr("fill", "#38bdf8")
+          .attr("opacity", 0.85)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 2.2)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = FRIESLAND_DATA.find(x => x.id === 'fri-I');
+            if (item) onSelectItem(item);
+          });
+
+        // 5. Lauwersmeer (V)
+        const lauwersCoords = FRIESLAND_GEOMETRIES.lauwersmeer.map(d3Projection);
+        riversLayer.append("path")
+          .attr("id", "area-fri-V")
+          .attr("d", d3.line().curve(d3.curveBasisClosed)(lauwersCoords))
+          .attr("fill", "#38bdf8")
+          .attr("opacity", 0.85)
+          .attr("stroke", "#0284c7")
+          .attr("stroke-width", 2.2)
+          .attr("class", "cursor-pointer transition-all")
+          .on("click", () => {
+            const item = FRIESLAND_DATA.find(x => x.id === 'fri-V');
+            if (item) onSelectItem(item);
+          });
       }
 
       // 7. Coördinaten projecteren voor alle items in de actieve module
@@ -1758,10 +2386,15 @@
 
       // Inset map tonen of verbergen
       const insetEl = document.getElementById('groningenInsetMap');
+      const insetGro = document.getElementById('insetGroningen');
+      const insetFri = document.getElementById('insetFriesland');
+
       if (insetEl) {
-        if (isGroningen) {
+        if (isProvince) {
           insetEl.classList.remove('hidden');
           insetEl.classList.add('flex');
+          if (insetGro) insetGro.classList.toggle('hidden', !isGroningen);
+          if (insetFri) insetFri.classList.toggle('hidden', !isFriesland);
         } else {
           insetEl.classList.add('hidden');
           insetEl.classList.remove('flex');
@@ -1771,7 +2404,7 @@
       // Legenda onderaan updaten
       const legEl = document.getElementById('mapLegendContent');
       if (legEl) {
-        if (isGroningen) {
+        if (isProvince) {
           legEl.innerHTML = `
             <div class="flex items-center gap-1.5"><span class="text-xs">⦿</span><span>Hoofdstad</span></div>
             <div class="w-px h-3 bg-sky-200"></div>
@@ -1794,7 +2427,7 @@
       const pinsLayer = d3.select("#layerPins");
       pinsLayer.selectAll("*").remove();
       const items = getCurrentItems();
-      const isGroningen = currentModuleId === 'groningen';
+      const isProvince = currentModuleId === 'groningen' || currentModuleId === 'friesland';
 
       const pinGroups = pinsLayer.selectAll(".map-pin")
         .data(items, d => d.id)
@@ -1816,8 +2449,8 @@
         .attr("fill", "transparent")
         .attr("class", "cursor-pointer");
 
-      if (!isGroningen) {
-        // Cyaan waterbadge met golfjes
+      if (!isProvince) {
+        // Cyaan waterbadge met golfjes (Wateren van Nederland)
         pinInner.append("circle")
           .attr("class", "pin-circle shadow-lg")
           .attr("r", 15)
@@ -2007,15 +2640,15 @@
       document.getElementById('headerMapBadgeText').textContent = mod.mapBadgeText;
 
       // Pill knoppen in de header
-      const btnWateren = document.getElementById('btnModuleWateren');
-      const btnGroningen = document.getElementById('btnModuleGroningen');
-      if (moduleId === 'wateren') {
-        btnWateren.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-sky-950 shadow-sm";
-        btnGroningen.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-amber-900 hover:text-amber-950";
-      } else {
-        btnGroningen.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-white text-amber-950 shadow-sm";
-        btnWateren.className = "px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 text-sky-800 hover:text-sky-950";
-      }
+      ['wateren', 'groningen', 'friesland'].forEach(id => {
+        const btn = document.getElementById(`btnModule${id.charAt(0).toUpperCase() + id.slice(1)}`);
+        if (!btn) return;
+        if (id === moduleId) {
+          btn.className = "px-2 sm:px-2.5 md:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 bg-white text-sky-950 shadow-sm";
+        } else {
+          btn.className = "px-2 sm:px-2.5 md:px-3 py-1.5 rounded-xl font-black text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 text-amber-900 hover:text-amber-950";
+        }
+      });
 
       // Categorie filters in sidebar
       const catFilterEl = document.getElementById('listCategoryFilter');
@@ -2051,7 +2684,7 @@
       modal.classList.add('flex');
 
       // Highlight actieve kaart
-      ['wateren', 'groningen'].forEach(id => {
+      ['wateren', 'groningen', 'friesland'].forEach(id => {
         const card = document.getElementById(`moduleCard-${id}`);
         if (card) {
           if (id === currentModuleId) {
@@ -2226,7 +2859,10 @@
       document.getElementById('badgeTitle').textContent = "Oefenen & Verkennen";
       document.getElementById('badgeSubtitle').textContent = "Tik op een nummer of symbool op de kaart";
 
-      if (currentModuleId === 'groningen') {
+      if (currentModuleId === 'friesland') {
+        document.getElementById('questionPrompt').textContent = "Klik op een stad, eiland of water om de uitspraak en info te ontdekken!";
+        document.getElementById('questionSubtext').textContent = "13 steden (1-13), 4 Waddeneilanden (a-d) en 5 wateren (I-V) van Friesland.";
+      } else if (currentModuleId === 'groningen') {
         document.getElementById('questionPrompt').textContent = "Klik op een stad, gebied of water om de uitspraak en info te ontdekken!";
         document.getElementById('questionSubtext').textContent = "14 steden (1-14), 4 gebieden (a-d) en 4 wateren (I-IV) van Groningen.";
       } else {
