@@ -1,0 +1,53 @@
+// Ezelsbruggetjes & weetjes voor kinderen (gekoppeld op item ID)
+const ITEM_TIPS = {
+  // Wateren van Nederland
+  1: "Schelde-Rijnkanaal: begint in Zeeland (Westerschelde) en gaat recht omhoog richting de Rijn!",
+  2: "Maas: komt uit het zuiden (België) dwars door Limburg naar Brabant. Denk aan Maastricht!",
+  3: "Amsterdam-Rijnkanaal: loopt van Amsterdam recht naar beneden naar de rivieren bij Tiel.",
+  4: "Waddenzee: de zee boven Nederland, tussen het vasteland en de Waddeneilanden (TV-TAS).",
+  5: "Westerschelde: de zuidelijkste zeearm in Zeeland (onder de Oosterschelde).",
+  6: "Lek: zit ten westen van de Nederrijn en stroomt richting Rotterdam.",
+  7: "Oosterschelde: boven de Westerschelde in Zeeland, met de beroemde stormvloedkering.",
+  8: "IJssel: gaat vanaf Arnhem recht omhoog naar het IJsselmeer. Een verticale lijn in het oosten!",
+  9: "Noordzeekanaal: kort kanaal van Amsterdam naar het westen (IJmuiden / Noordzee).",
+  10: "Waal: de dikste en breedste rivier in het midden-zuiden, onder de Nederrijn/Lek.",
+  11: "Noordzee: de grote open zee aan de hele westkant en noordkant van Nederland.",
+  12: "Nieuwe Waterweg: het laatste stukje water van Rotterdam naar de Noordzee.",
+  13: "Veluwemeer: het smalle meer tussen Flevoland en de Veluwe (Gelderland).",
+  14: "Twentekanaal: helemaal in het oosten bij Enschede en Hengelo (Twente).",
+  15: "IJsselmeer: het grote meer in het midden, onder de Afsluitdijk.",
+  16: "Nederrijn: de bovenste tak van de Rijn richting Utrecht, wordt daarna de Lek.",
+  17: "Rijn: komt bij Lobith (oosten) Nederland binnen en splitst daar meteen!",
+
+  // Groningen
+  "gro-1": "Stad Groningen: het grote middelpunt van de provincie (hoofdstad, dubbele rode cirkel).",
+  "gro-2": "Delfzijl: grote zeehaven aan de Eems/Dollard in het noordoosten.",
+  "gro-3": "Appingedam: ligt vlak naast Delfzijl, bekend van de hangende keukens boven het water.",
+  "gro-8": "Ter Apel: helemaal in het uiterste zuidoostpuntje van Groningen!",
+  "gro-a": "Rottumerplaat & Rottumeroog: de twee onbewoonde eilandjes helemaal bovenin de Waddenzee.",
+  "gro-b": "Het Hogeland: het 'hoge land' helemaal in het noorden van Groningen.",
+  "gro-c": "Westerwolde: het groene gebied helemaal in het zuidoosten bij Ter Apel.",
+  "gro-d": "Bourtange: de beroemde stervormige vesting helemaal aan de Duitse grens.",
+  "gro-I": "Eemskanaal: loopt kaarsrecht van de stad Groningen naar Delfzijl.",
+  "gro-II": "Van Starkenborghkanaal: komt vanuit Friesland en loopt naar de stad Groningen.",
+  "gro-III": "Dollard: de grote inham (bocht van zee) rechts naast Delfzijl.",
+  "gro-IV": "Lauwersmeer: het meer precies op de grens van Groningen en Friesland!",
+
+  // Friesland
+  "fri-1": "Leeuwarden: de hoofdstad precies in het midden van Friesland (dubbele rode cirkel).",
+  "fri-5": "Franeker: ligt precies tussen Harlingen (8) en Leeuwarden (1) aan het Van Harinxmakanaal.",
+  "fri-6": "Dokkum: ligt helemaal in het noorden van het Friese vasteland.",
+  "fri-8": "Harlingen: aan de westkust, waar de veerboot naar Terschelling en Vlieland vertrekt.",
+  "fri-9": "Stavoren: helemaal op de zuidwestpunt aan het IJsselmeer (Vrouwtje van Stavoren).",
+  "fri-11": "Sneek: in het hart van de Friese meren, vlak bij het Sneekermeer (I).",
+  "fri-13": "Nes: let op! Dit is het enige stadje op een eiland (op Ameland).",
+  "fri-a": "Ezelsbruggetje TV-TAS: van rechts naar links ligt Schiermonnikoog helemaal rechts (boven Lauwersmeer)!",
+  "fri-b": "Ameland: het tweede eiland van rechts (met plaatsje Nes nr. 13 erop).",
+  "fri-c": "Terschelling: het grote eiland schuin boven Harlingen (van TV-TAS).",
+  "fri-d": "Vlieland: het meest westelijke eiland op deze kaart (onderaan de rij eilanden).",
+  "fri-I": "Sneekermeer: het meer rechts naast de stad Sneek (11).",
+  "fri-II": "Waddenzee: het water tussen het vasteland van Friesland en de 4 Waddeneilanden.",
+  "fri-III": "Van Harinxmakanaal: van HARlingen naar Leeuwarden (Harinxma begint met Har-!).",
+  "fri-IV": "Prinses Margrietkanaal: loopt schuin door heel Friesland van Lemmer naar Groningen.",
+  "fri-V": "Lauwersmeer: het meer helemaal rechtsboven op de grens met Groningen."
+};

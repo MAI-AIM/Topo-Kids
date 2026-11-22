@@ -4,7 +4,8 @@
   "description": "Interactieve educatieve webapplicatie om de 17 wateren van Nederland te oefenen en spellen",
   "scripts": {
     "dev": "npx serve .",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "test": "node scripts/verify.js"
   },
   "keywords": [
     "topografie",
